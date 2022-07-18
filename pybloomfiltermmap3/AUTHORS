@@ -1,0 +1,22 @@
+Current maintainers
+^^^^^^^^^^^^^^^^^^^
+- Prashant Sinha (`@prashnts <prashnts_>`_)
+- Vytautas Mizgiris (`@mizvyt <mizvyt_>`_)
+
+Original author
+^^^^^^^^^^^^^^^
+- Michael Axiak (`@axiak <axiak_>`_)
+
+Contributors
+^^^^^^^^^^^^
+- Rob Stacey
+- dlecocq: for superfast addition
+- pbutler: fix memory leak
+- Dan Crosta: convert MurmurHash3 to C from C++
+- gaetano-guerriero: fixed base64 dumps
+- gonzalezzfelipe: fixed buggy "copy_template" method
+- xyb: added bit_count and approximation of set elements.
+
+.. _axiak: https://github.com/axiak
+.. _prashnts: https://github.com/prashnts
+.. _mizvyt: https://github.com/mizvyt

@@ -1,0 +1,127 @@
+=========
+Changelog
+=========
+
+All notable changes to this project will be documented in this file.
+
+The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
+and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
+
+[Unreleased]
+------------
+
+Added
+^^^^^
+- Added `BitCount` to get approximate count of elements in the set. (@xyb)
+- Added :meth:`BloomFilter.approx_len` and :meth:`BloomFilter.bit_count` properties.
+
+Changes
+^^^^^^^
+- Calling `len(bloomfilter)` now reports approximate element count if any set union or intersection was performed.
+
+
+`0.5.3`_ (2020-08-22)
+---------------------
+.. _0.5.3: https://github.com/prashnts/pybloomfiltermmap3/releases/tag/0.5.3
+
+Fixes
+^^^^^
+- Fixed a long standing issue where Bloom filter length would not get reset after calling `clear_all()`
+- Added C99 compatibility for `MurmurHash3.c` as pybloomfilter would fail on some systems such as Alpine
+
+Changes
+^^^^^^^
+- Release tooling (uploads tagged releases to pypi).
+
+
+`0.5.2`_ (2020-01-13)
+---------------------
+.. _0.5.2: https://github.com/prashnts/pybloomfiltermmap3/releases/tag/0.5.2
+
+Changes
+^^^^^^^
+- Python setup will now always try to use and build from Cython, if the module is available in the current environment.
+  To force cythonize, use "--cython". If the module is not available and no "--cython" was used, the setup
+  will look for a bundled Cython source.
+
+
+`0.5.1`_ (2019-12-31)
+---------------------
+.. _0.5.1: https://github.com/prashnts/pybloomfiltermmap3/releases/tag/0.5.1
+
+Changes
+^^^^^^^
+- Add :meth:`BloomFilter.bit_array` property for bit vector representation
+- Add :meth:`BloomFilter.filename` property and issue a PendingDeprecationWarning when using :meth:`BloomFilter.name`
+- Do memset after initializing BloomFilter instance to set alignment bytes to 0 prior to populating the filter (see notes in #24)
+- Remove ``mode`` parameter from :meth:`BloomFilter.from_base64` method introduced in 0.5.0 as part of a refactoring (see notes in #23)
+- Add explicit flag to build using Cython when building or installing a package; setup looks for a bundled Cython
+  source by default (included in the PyPI distribution package)
+
+
+`0.5.0`_ (2019-11-25)
+---------------------
+.. _0.5.0: https://github.com/prashnts/pybloomfiltermmap3/releases/tag/0.5.0
+
+Changes
+^^^^^^^
+- Add support for read-only Bloom filter files
+- Add customization of hash seeds for hashing algorithms
+- Drop Python < 3.5 support
+
+
+`0.4.19`_ (2019-10-11)
+----------------------
+.. _0.4.19: https://pypi.org/project/pybloomfiltermmap3/0.4.19
+
+Changes
+^^^^^^^
+- Ensure that filename is encoded in :meth:`~pybloomfilter.BloomFilter.copy_template` (thanks `@gonzalezzfelipe <gonzalezzfelipe_>`_!)
+
+
+`0.4.18`_ (2019-10-08)
+----------------------
+.. _0.4.18: https://pypi.org/project/pybloomfiltermmap3/0.4.18
+
+Fixes
+^^^^^
+- Fix missing Cython dependency in setup.py
+
+
+`0.4.17`_ (2019-08-25)
+----------------------
+.. _0.4.17: https://pypi.org/project/pybloomfiltermmap3/0.4.17
+
+Fixes
+^^^^^
+- PyPi wants ``long_description`` and its type
+
+
+`0.4.16`_ (2019-08-25)
+----------------------
+.. _0.4.16: https://pypi.org/project/pybloomfiltermmap3/0.4.16
+
+Fixes
+^^^^^
+- Fix read / write of base64 encoded filter files (thanks `@gaetano-guerriero <gaetano-guerriero_>`_!)
+
+
+`0.4.15`_ (2019-04-09)
+----------------------
+.. _0.4.15: https://pypi.org/project/pybloomfiltermmap3/0.4.15
+
+Changes
+^^^^^^^
+- Remove Python 2 support, add Python 3 support
+
+
+Previous Versions
+-----------------
+
+See Python 2 `pybloomfiltermmap CHANGELOG <https://github.com/axiak/pybloomfiltermmap/blob/master/CHANGELOG>`_.
+
+
+.. _prashnts: https://github.com/prashnts
+.. _mizvyt: https://github.com/mizvyt
+.. _gonzalezzfelipe: https://github.com/gonzalezzfelipe
+.. _gaetano-guerriero: https://github.com/gaetano-guerriero

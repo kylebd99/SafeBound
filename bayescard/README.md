@@ -1,3 +1,5 @@
+Note: This is a copy of the repository https://github.com/wuziniu/BayesCard. It is copied here in the interest of experimental replicability.
+
 # BayesCard
 
 ## Environment setup

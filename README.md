@@ -1,5 +1,5 @@
 <meta name="robots" content="noindex">
-#SafeBound
+****SafeBound
 
 This repository contains the experimental code for SafeBound, a practical cardinality estimator, as well a comparison method, BayesCard. Further comparison methods will be added soon. The core files are SafeBoundUtils.pyx, Histograms.pyx, and PiecewiseConstantFunctionUtils.pyx.
 

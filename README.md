@@ -42,23 +42,27 @@ The ***JoinQueryGraph*** defines the target query's structure and predicates and
 
 As stated above, the [JoinQueryGraph](https://github.com/AnonymousSigmod2023/SafeBound/blob/main/Source/JoinGraphUtils.pyx) class defines a particular SQL query. The constructor requires no inputs, then aliases/joins/predicates are incrementally added to the query. Here is an example usage which finds all actors which have acted in both 1970 and 2010:
 
-``
-query = JoinQueryGraph()  \n
-query.addAlias("ActorName", "an")  
-query.addAlias("ActedIn", "ai1")  
-query.addAlias("ActedIn", "ai2")  
-query.addJoin("an", "Id", "ai1", "ActorId")  
-query.addJoin("an", "Id", "ai2", "ActorId")  
-query.addPredicate("ai1", "Year", "=", "1970")  
-query.addPredicate("ai2", "Year", "=", "2010")  
-query.buildJoinGraph()  
+```
+query = JoinQueryGraph(
+query.addAlias("ActorName", "an")
+query.addAlias("ActedIn", "ai1")
+query.addAlias("ActedIn", "ai2")
+query.addJoin("an", "Id", "ai1", "ActorId")
+query.addJoin("an", "Id", "ai2", "ActorId")
+query.addPredicate("ai1", "Year", "=", "1970")
+query.addPredicate("ai2", "Year", "=", "2010")
+query.buildJoinGraph()
 query.printJoinGraph()
-``
+```
 
 There is experimental parsing code which can be found in [SQLParser.py](https://github.com/AnonymousSigmod2023/SafeBound/blob/main/Source/SQLParser.py) that transforms a file with many SQL queries to a list of JoinQueryGraphs. However, it is currently very limited and requires SQL queries which are nicely structured.
 
 
 
+# Reproducibility
+
+TODO: Create an environment.yml file
+TODO: Create a bash file to download the datasets
 
 
 

@@ -15,12 +15,12 @@ There are two external-facing classes in this repository, `SafeBound` and `JoinQ
 
 The constructor for [SafeBound](https://github.com/AnonymousSigmod2023/SafeBound/blob/main/Source/SafeBoundUtils.pyx) has many parameters:
 
-``
+```
 SafeBound(tableDFs, tableNames, tableJoinCols, relativeErrorPerSegment, originalFilterCols = [], 
                      numBuckets = 25, numEqualityOutliers=500, FKtoKDict = dict(),
                      numOutliers = 5, trackNulls=True, trackBiGrams=True, numCores=12, groupingMethod = "CompleteClustering",
                      modelCDF=True, verbose=False)
-``
+```
 
 They split roughly into three categories; 1) required data inputs 2) tuning knobs 3) experimental configurations. 
 
@@ -32,9 +32,9 @@ Lastly, ***groupingMethod and ModelCDF*** are experimental knobs which should be
 
 When querying, the parameters are much simpler.
 
-``
+```
 SafeBound.functionalFrequencyBound(self, joinQueryGraph, dbConn = None, verbose = 0)
-``
+```
 The ***JoinQueryGraph*** defines the target query's structure and predicates and is, of course, required. Further, the definition of the JoinQueryGraph must line up with the tables and columns defined during the statistics construction. ***dbConn*** is an experimental parameter which should be ignored. The result of this function will be a nonnegative double which upper bounds the cardinality of the query.
 
 

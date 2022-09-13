@@ -57,6 +57,9 @@ query.printJoinGraph()
 
 There is experimental parsing code which can be found in [SQLParser.py](https://github.com/AnonymousSigmod2023/SafeBound/blob/main/Source/SQLParser.py) that transforms a file with many SQL queries to a list of JoinQueryGraphs. However, it is currently very limited and requires SQL queries which are nicely structured.
 
+# Current Limitations
+
+SafeBound can currently handle acyclic queries with single-attribute inner joins and equality, range, LIKE, or IN predicates. Further, it can technically handle cyclic queries, although the estimates are somewhat limited. It does not support: outer joins, negation, theta joins, or multi-attribute joins. 
 
 
 # Reproducibility

@@ -1,5 +1,4 @@
 # cython: infer_types=True
-import sys
 import pandas as pd
 import numpy as np
 from math import ceil, log2, sqrt
@@ -13,8 +12,8 @@ import fastcluster as fc
 import scipy.cluster.hierarchy as sch
 from scipy.spatial import distance_matrix
 from pybloomfilter import BloomFilter
-import sys
-rootFileDirectory = "/home/ec2-user/FrequencyBounds/"
+import sys, os
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) +'/'
 sys.path.append(rootFileDirectory + 'Source')
 from JoinGraphUtils import *
 from PiecewiseConstantFunctionUtils cimport *

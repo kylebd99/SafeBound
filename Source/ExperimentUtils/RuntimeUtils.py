@@ -1,15 +1,15 @@
-rootDirectory = '/home/ec2-user/FrequencyBounds/'
 import pandas as pd
 import pickle
 from datetime import datetime, timedelta
 import os
 import re
 import sys
-sys.path.append(rootDirectory + 'Source')
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) +'/'
+sys.path.append(rootFileDirectory + 'Source')
 from DBConnectionUtils import *
 from SafeBoundUtils import *
 from SQLParser import *
-sys.path.append(rootDirectory + 'BayesCard')
+sys.path.append(rootFileDirectory + 'bayescard')
 from Schemas.stats.schema import gen_stats_light_schema
 from Schemas.imdb.schema import gen_job_light_imdb_schema    
 from DataPrepare.query_prepare_BayesCard import prepare_join_queries
@@ -378,31 +378,31 @@ def evaluate_runtime(method = 'SafeBound',
     queryJGs = None        
     dbConn = None
     if benchmark == 'JOBLight':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightQueries.sql')
         dbConn = getDBConn('imdblight')
     elif benchmark == 'JOBLightRanges':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql')
         dbConn = getDBConn('imdblightranges')
     elif benchmark == 'JOBM':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBMQueries.sql')
         dbConn = getDBConn('imdbm')
     elif benchmark == 'Stats':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
         dbConn = getDBConn('stats')
     elif benchmark == 'JOBLight2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightQueries.sql')
         dbConn = getDBConn('imdblight2d')
     elif benchmark == 'JOBLightRanges2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql')
         dbConn = getDBConn('imdblightranges2d')
     elif benchmark == 'JOBM2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBMQueries.sql')
         dbConn = getDBConn('imdbm')
     elif benchmark == 'Stats2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
         dbConn = getDBConn('stats2d')
     elif benchmark == 'StatsPK':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
         dbConn = getDBConn('statspk')
     
     if method == 'SafeBound':

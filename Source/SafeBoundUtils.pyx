@@ -6,8 +6,8 @@ import pandas as pd
 import itertools
 import multiprocessing as mp
 import concurrent.futures
-import sys
-rootFileDirectory = "/home/ec2-user/FrequencyBounds/"
+import sys,os
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) +'/'
 sys.path.append(rootFileDirectory + 'Source')
 from JoinGraphUtils import *
 from HistogramUtils import *

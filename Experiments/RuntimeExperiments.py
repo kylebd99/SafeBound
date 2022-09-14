@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys
-rootFileDirectory = "/home/ec2-user/FrequencyBounds/"
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) +'/'
 sys.path.append(rootFileDirectory + 'Source/ExperimentUtils')
 from RuntimeUtils import *
 

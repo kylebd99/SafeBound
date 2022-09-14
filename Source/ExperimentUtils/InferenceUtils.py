@@ -1,14 +1,14 @@
-rootDirectory = '/home/ec2-user/FrequencyBounds/'
 import pandas as pd
 import pickle
 from datetime import datetime, timedelta
 import os
 import sys
-sys.path.append(rootDirectory + 'Source')
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) +'/'
+sys.path.append(rootFileDirectory + 'Source')
 from DBConnectionUtils import *
 from SafeBoundUtils import *
 from SQLParser import *
-sys.path.append(rootDirectory + 'BayesCard')
+sys.path.append(rootFileDirectory + 'bayescard')
 from Schemas.stats.schema import gen_stats_light_schema
 from Schemas.imdb.schema import gen_job_light_imdb_schema    
 from DataPrepare.query_prepare_BayesCard import prepare_join_queries

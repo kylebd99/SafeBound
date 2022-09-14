@@ -1,6 +1,6 @@
 import pandas as pd
-import sys
-rootFileDirectory = "/home/ec2-user/FrequencyBounds/"
+import sys, os
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) +'/'
 sys.path.append(rootFileDirectory + 'Source/ExperimentUtils')
 from BuildUtils import *
 

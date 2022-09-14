@@ -1,4 +1,3 @@
-rootDirectory = '/home/ec2-user/FrequencyBounds/'
 import pandas as pd
 import pickle
 from datetime import datetime, timedelta
@@ -6,7 +5,8 @@ import multiprocessing
 import sys
 import os
 import pickle
-sys.path.append(rootDirectory + 'Source')
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) +'/'
+sys.path.append(rootFileDirectory + "Source/")
 from DBConnectionUtils import *
 from SafeBoundUtils import *
 from SQLParser import *
@@ -20,18 +20,18 @@ def gather_true_cardinalities(benchmark = 'JOBLight',
                               outputFile = '../../Data/Results/SafeBound_Inference_JOBLight_1.csv'):
     queryJGs = None        
     dbConn = None
-    safeBound = pickle.load(open(rootDirectory + 'StatObjects/SafeBound_5_' + benchmark + ".pkl", "rb"))
+    safeBound = pickle.load(open(rootFileDirectory + 'StatObjects/SafeBound_5_' + benchmark + ".pkl", "rb"))
     if benchmark == 'JOBLight':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightQueries.sql')
         dbConn = getDBConn('imdblight')
     elif benchmark == 'JOBLightRanges':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql')
         dbConn = getDBConn('imdblightranges')
     elif benchmark == 'JOBM':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBMQueries.sql')
         dbConn = getDBConn('imdbm')
     elif benchmark == 'Stats':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
         dbConn = getDBConn('statsfk')
     
     allQueryHints = [[] for _ in range(len(queryJGs))]

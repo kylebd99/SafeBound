@@ -1,6 +1,8 @@
 import pandas as pd
+import os
+rootDirectory = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) +'/'
 
-rootDirectory = '/home/ec2-user/FrequencyBounds/'
+
 
 def load_imdb():
     aka_name = pd.read_csv(rootDirectory + "Data/JOB/aka_name.csv", quotechar = "\"", escapechar="\\", 

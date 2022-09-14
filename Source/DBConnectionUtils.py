@@ -1,6 +1,10 @@
 import re
 import psycopg2
 import numpy as np
+import sys, os
+rootFileDirectory = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) +'/'
+sys.path.append(rootFileDirectory + 'Source')
+print(rootFileDirectory+'Source')
 from JoinGraphUtils import *
 
 def getDBConn(dbName="IMDB"):

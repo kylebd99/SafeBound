@@ -1,8 +1,8 @@
-\copy badges from 'datasets/stats_simplified/badges.csv' with CSV header;
-\copy comments from 'datasets/stats_simplified/comments.csv' with CSV header;
-\copy users from 'datasets/stats_simplified/users.csv' with CSV header;
-\copy tags from 'datasets/stats_simplified/tags.csv' with CSV header;
-\copy posts from 'datasets/stats_simplified/posts.csv' with CSV header;
-\copy votes from 'datasets/stats_simplified/votes.csv' with CSV header;
-\copy posthistory from 'datasets/stats_simplified/postHistory.csv' with CSV header;
-\copy postlinks from 'datasets/stats_simplified/postLinks.csv' with CSV header;
+\copy badges from 'Data/Stats/badges.csv' with CSV header;
+\copy comments from 'Data/Stats/comments.csv' with CSV header;
+\copy users from 'Data/Stats/users.csv' with CSV header;
+\copy tags from 'Data/Stats/tags.csv' with CSV header;
+\copy posts from 'Data/Stats/posts.csv' with CSV header;
+\copy votes from 'Data/Stats/votes.csv' with CSV header;
+\copy posthistory from 'Data/Stats/postHistory.csv' with CSV header;
+\copy postlinks from 'Data/Stats/postLinks.csv' with CSV header;

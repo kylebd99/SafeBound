@@ -63,12 +63,54 @@ SafeBound can currently handle acyclic queries with single-attribute inner joins
 
 
 # Reproducibility
+This section assumes a linux (specifically Ubuntu) environment. Other linux distributions should be easy to adjust the instructions for, but Windows and MacOS are not supported. Note, all commands are intended to be run from the outermost directory of the repository.
 
-TODO: Create an environment.yml file
-TODO: Create a bash file to download the datasets
+***Building SafeBound Library***
+1) Set up the conda environment in order to build SafeBound using the environment.yml file.
 
+```Conda env create SafeBoundEnv```
 
+2) Build the pybloomfilter package.
 
+```python pybloomfiltermmap3/setup.py install``` 
+
+3) Build the SafeBound package
+
+```python Source/CythonBuild.py build_ext```
+
+At this point, the SafeBound library should be ready for use. An example usage can be found in the [CREATE EXAMPLE JUPYTER NOTEBOOK]. 
+
+***Setting Up Benchmarks***
+
+The following steps are specific to recreating the experimental environment from the paper. Specifically, setting up the Postgres instance which will be used to obtain runtime results.
+
+4) Setup postgres cluster. If one already exists on the system, then this step can likely be skipped.
+
+```
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-get update
+sudo apt-get -y install postgresql
+pg_ctlcluster 13 main start
+```
+
+To make the remainder of the commands run smoothly, you have to create a user with the same username as your linux username. This allows for the "psql" command to be run without sudo.
+
+```sudo -u postgres createuser [USERNAME] –interactive```
+
+5) Create the JOB benchmark databases. This command may run for several minutes as it creates a version of the IMDB database for each benchmark JOBLight, JOBLightRanges, and JOBM.
+
+```
+bash CreateJOBBenchmark.bash
+```
+
+6) Create the Stats benchmark database.
+
+```
+bash CreateStatsBenchmark.bash
+```
+
+***Running Experiments***
 
 
 

@@ -9,6 +9,8 @@ if __name__ == '__main__':
     
     benchmarks = ['JOBLight', 'JOBLightRanges', 'JOBM', 'Stats']
 
+    methods = ['SafeBound', "Postgres", "Postgres2D", "BayesCard", "PessemisticCardinality"]
+
     PostgresParams = [10, 100, 1000, 5000, 10000]
 
     Postgres2DParams = [10, 100, 1000, 5000, 10000]

@@ -68,13 +68,6 @@ class MultiColumnFunctionHistogram:
         
         if len(filterCols) == 0:
             return
-                
-        self.equalityPairNames = []
-        self.equalityPairCols = [[x[0], x[1]] if x[0] < x[1] else [x[1], x[0]] for x in combinations(self.filterCols, 2)]
-        for col1, col2 in self.equalityPairCols:
-            continue
-            pairColName = col1 + "_String" + "_" + col2 + "_String"
-            self.equalityPairNames.append(pairColName)
         
         
         if MPExecutor: 
@@ -93,23 +86,6 @@ class MultiColumnFunctionHistogram:
                                                   self.numOutliers,
                                                   self.trackNulls,
                                                   self.trackTriGrams,
-                                                  groupingMethod,
-                                                  modelCDF,
-                                                  verbose])
-                filterColNames.append(filterCol)
-            for filterCol, pairwiseFilterCols in zip(self.equalityPairNames, self.equalityPairCols):
-                if verbose > 0:
-                    print("Building Histogram: " + filterCol)
-                filterColArgs.append([table[list(set(pairwiseFilterCols+self.joinCols))], 
-                                                  filterCol,
-                                                  pairwiseFilterCols,
-                                                  self.joinCols.copy(),
-                                                  0,
-                                                  max(1, int(self.numEqualityOutliers/float(len(self.filterCols)))), 
-                                                  self.relativeErrorPerSegment,
-                                                  max(1, int(self.numOutliers/float(len(self.filterCols)))),
-                                                  False,
-                                                  False,
                                                   groupingMethod,
                                                   modelCDF,
                                                   verbose])
@@ -134,22 +110,6 @@ class MultiColumnFunctionHistogram:
                                                            trackTriGrams = trackTriGrams,
                                                            groupingMethod = groupingMethod,
                                                            modelCDF=modelCDF,
-                                                           verbose=verbose)
-            for filterCol, pairwiseFilterCols in zip(self.equalityPairNames, self.equalityPairCols):
-                if verbose>0:
-                    print("Building Histogram: " + filterCol)
-                self.hists[filterCol]= VWFunctionHistogram(table=table,
-                                                           filterCol = filterCol, 
-                                                           pairwiseFilterCols = pairwiseFilterCols,
-                                                           joinCols = self.joinCols,
-                                                           numBins = 0, 
-                                                           numEqualityOutliers = max(1, int(self.numEqualityOutliers/float(len(self.filterCols)))),
-                                                           relativeErrorPerSegment = self.relativeErrorPerSegment,
-                                                           numOutliers = max(1, int(self.numOutliers/float(len(self.filterCols)))),
-                                                           trackNulls = False,
-                                                           trackTriGrams = False,
-                                                           groupingMethod = groupingMethod,
-                                                           modelCDF = modelCDF,
                                                            verbose=verbose)
     
         
@@ -183,26 +143,6 @@ class MultiColumnFunctionHistogram:
                 joinCol = joinCols[i]
                 function = joinColFunctions[joinCol]
                 validFunctions[i].append(function)
-        
-        equalityPreds = [x for x in listOfPreds if x.predType == "="]
-        if len(equalityPreds) > 1:
-            pairsOfPreds = [(x, y) if x.colName < y.colName else (y,x) for x,y in combinations(equalityPreds, 2)]
-            for pred1, pred2 in pairsOfPreds:
-                pairwiseColName = pred1.colName + "_String" + "_" + pred2.colName + "_String"
-                if pairwiseColName in self.equalityPairNames:
-                    pred1CompValue = pred1.compValue
-                    if not self.hists[pred1.colName].isStringColumn:
-                        pred1CompValue = str(float(pred1CompValue))
-                    pred2CompValue = pred2.compValue
-                    if not self.hists[pred2.colName].isStringColumn:
-                        pred2CompValue = str(float(pred2CompValue))
-                    predValue = pred1CompValue + "_" + pred2CompValue
-                    pairwisePred = Predicate(pred1.colName + "_" + pred2.colName, "=", predValue)
-                    joinColFunctions = self.hists[pairwiseColName].getMinFunctionsSatisfyingPredicates([pairwisePred], joinCols)
-                    for i in range(len(joinCols)):
-                        joinCol = joinCols[i]
-                        function = joinColFunctions[joinCol]
-                        validFunctions[i].append(function)
     
         minFunctionsDict = dict()
         for i in range(len(joinCols)):
@@ -215,10 +155,10 @@ class MultiColumnFunctionHistogram:
             print("Histogram For Column: " + col)
             self.hists[col].printHist()
 
-    def memory(self):
+    def memory(self, verbose):
         footprint = 0
         for col, hist in self.hists.items():
-            footprint += hist.memory()
+            footprint += hist.memory(verbose)
         for joinCol in self.joinCols:
             footprint += self.fullFunctions[joinCol].memory()
         return footprint
@@ -246,87 +186,7 @@ class VWFunctionHistogram:
         self.trackTriGrams = trackTriGrams
         
         
-        if len(pairwiseFilterCols) == 2:
-            self.equalityMaxFunctions = dict()
-            notNullTable = table.loc[:,list(set(pairwiseFilterCols + joinCols))]
-            notNullTable = notNullTable.loc[(~notNullTable[pairwiseFilterCols[0]].isna()) & (~notNullTable[pairwiseFilterCols[1]].isna())]
-            self.notNullValues = len(notNullTable)
-            if self.notNullValues == 0:
-                return
-            notNullTable[filterCol] = notNullTable[pairwiseFilterCols].apply(tuple, axis=1)    
-            if not pairwiseFilterCols[0] in joinCols: 
-                notNullTable.drop([pairwiseFilterCols[0]], axis=1, inplace=True)
-            if not pairwiseFilterCols[1] in joinCols: 
-                notNullTable.drop([pairwiseFilterCols[1]], axis=1, inplace=True)
-            self.min = min(notNullTable[filterCol])
-            self.max = max(notNullTable[filterCol])
-            self.isStringColumn = True
-            
-            notNullTable.sort_values(filterCol, inplace=True)
-            numFilterValues = notNullTable[filterCol].nunique()
-            
-            filterOutlierValCounts = notNullTable[filterCol].value_counts().head(self.numEqualityOutliers).reset_index()
-            outlierVals = filterOutlierValCounts["index"]
-            outlierCounts = filterOutlierValCounts[filterCol]
-            
-            outlierFunctionDicts = []
-            for curVal in outlierVals:
-                leftIdx = bisect_left(notNullTable[filterCol].array, curVal)
-                rightIdx = bisect_right(notNullTable[filterCol].array, curVal)
-                score = 0
-                functionDict = dict()
-                for joinCol in joinCols:
-                    valCounts = np.array(sorted(notNullTable[joinCol].iloc[leftIdx:rightIdx].value_counts(ascending=False).to_list(), 
-                                                reverse=True), 
-                                         dtype='int')
-                    function = PiecewiseConstantFunction(valCounts, self.relativeErrorPerSegment, modelCDF=modelCDF)
-                    function.compressFunc()
-                    functionDict[joinCol] = function
-                outlierFunctionDicts.append(functionDict)
-
-            self.bloomFilters = []
-            groupValues, self.representativeEqualityFunctionDicts = VWFunctionHistogram.coalesceFunctionDicts(outlierVals,
-                                                                                                              outlierFunctionDicts, 
-                                                                                                              joinCols,
-                                                                                                              self.numOutliers,
-                                                                                                              groupingMethod,
-                                                                                                              modelCDF)
-            for i in range(len(groupValues)):
-                vals = groupValues[i]
-                bloomFilter = BloomFilter(len(vals), .00001)
-                for val in vals:
-                    lval = val[0]
-                    rval = val[1]
-                    if not isinstance(lval, str): 
-                        lval = str(float(lval))
-                    if not isinstance(rval, str): 
-                        rval = str(float(rval))
-                    bloomFilter.add(lval + "_" + rval)
-                self.bloomFilters.append(bloomFilter)
-
-            # To handle the remaining equality values, Groupby into [filterCol, size], 
-            # then rank these pairs by size within each filterCol value. Then,take the maximum over each rank. 
-            # This gives you the pointwise maximum degree function. Lastly, truncate it to the maximum number of
-            # rows per filter value.
-            remainderTable = notNullTable[~notNullTable[filterCol].isin(outlierVals)]
-            remainderMaxCount = remainderTable.groupby(filterCol).size().max()
-            for joinCol in joinCols:
-                if len(remainderTable) == 0:
-                    self.equalityMaxFunctions[joinCol] = getEmptyFunction()
-                    continue
-
-                remainderMaxDegrees = None
-                if filterCol != joinCol:
-                    remainderFilterJoinAndSize = remainderTable.groupby([filterCol, joinCol]).size().reset_index(name="size")
-                    remainderFilterJoinAndSize['rank'] = remainderFilterJoinAndSize.groupby(filterCol)['size'].rank(method='first')
-                    remainderMaxDegrees = remainderFilterJoinAndSize.groupby('rank')['size'].max().sort_values(ascending=False)
-                else:
-                    remainderMaxDegrees = remainderTable.groupby(filterCol).size().sort_values(ascending=False).head(1)
-                maxFunction = PiecewiseConstantFunction(remainderMaxDegrees.to_numpy(), self.relativeErrorPerSegment, modelCDF=modelCDF)
-                maxFunction = maxFunction.rightTruncateByRows(remainderMaxCount)
-                maxFunction.compressFunc()
-                self.equalityMaxFunctions[joinCol] = maxFunction
-            return
+       
 
                 
         self.isStringColumn = table[filterCol].dtype == 'object'
@@ -760,7 +620,7 @@ class VWFunctionHistogram:
                     print("[Standard]")
                     self.maxFunctionsPerJoinColPerStepSize[joinCol][self.intervals[i][2]].printDiagnostics()
                     
-    def memory(self):
+    def memory(self, verbose):
         intervalFootprint = 0
         rangeFootprint = 0
         equalityBloomFilterFootprint = 0
@@ -794,15 +654,16 @@ class VWFunctionHistogram:
                         triGramFootprint += funcDict[joinCol].memory()
                 for joinCol in self.joinCols:
                     triGramFootprint += self.triGramRemainderFunctionDict[joinCol].memory()
-                    
-        print("Filter Col: " + self.filterCol)
-        print("Interval Footprint: " + str(intervalFootprint))
-        print("Range Footprint: " + str(rangeFootprint))
-        print("Equality Bloom Filter Footprint: " + str(equalityBloomFilterFootprint))
-        print("Equality Outlier Footprint: " + str(equalityOutlierFootprint))
-        print("Equality Max Footprint: " + str(equalityMaxFootprint))
-        print("TriGram Footprint: " + str(triGramFootprint))
-        print("Null Footprint: " + str(nullFootprint))
+
+        if verbose:
+            print("Filter Col: " + self.filterCol)
+            print("Interval Footprint: " + str(intervalFootprint))
+            print("Range Footprint: " + str(rangeFootprint))
+            print("Equality Bloom Filter Footprint: " + str(equalityBloomFilterFootprint))
+            print("Equality Outlier Footprint: " + str(equalityOutlierFootprint))
+            print("Equality Max Footprint: " + str(equalityMaxFootprint))
+            print("TriGram Footprint: " + str(triGramFootprint))
+            print("Null Footprint: " + str(nullFootprint))
         return intervalFootprint + rangeFootprint + equalityBloomFilterFootprint + equalityOutlierFootprint + equalityMaxFootprint + triGramFootprint + nullFootprint
 
         

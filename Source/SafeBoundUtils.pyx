@@ -22,12 +22,12 @@ class QueryTableStats:
 class TableStats:
     
     def __init__(self, table, tableName, joinCols, relativeErrorPerSegment, filterCols = [],
-                 numBuckets = 25, numEqualityOutliers = 500, numOutliers =5, trackNulls=True,
+                 numHistogramBuckets = 25, numEqualityOutliers = 500, numCDFGroups =5, trackNulls=True,
                  trackBiGrams=True, MPExecutor=None, groupingMethod="CompleteClustering", modelCDF=True, verbose=False):
         self.tableName = tableName
         self.relativeErrorPerSegment = relativeErrorPerSegment
-        self.numOutliers = numOutliers
-        self.numBuckets = numBuckets
+        self.numCDFGroups = numCDFGroups
+        self.numHistogramBuckets = numHistogramBuckets
         self.numEqualityOutliers = numEqualityOutliers
         self.filterCols = filterCols
         self.joinCols = joinCols
@@ -40,10 +40,10 @@ class TableStats:
         self.functionHistogram = MultiColumnFunctionHistogram(table,
                                                               self.filterCols,
                                                               self.joinCols,
-                                                              self.numBuckets,
+                                                              self.numHistogramBuckets,
                                                               self.numEqualityOutliers,
                                                               self.relativeErrorPerSegment, 
-                                                              self.numOutliers,
+                                                              self.numCDFGroups,
                                                               self.trackNulls,
                                                               self.trackBiGrams,
                                                               MPExecutor,
@@ -83,20 +83,20 @@ class TableStats:
         print("Function Histgrams:")
         self.functionHistogram.printHists()
     
-    def memory(self):
-        return self.functionHistogram.memory()
+    def memory(self, verbose):
+        return self.functionHistogram.memory(verbose)
 
 
 class SafeBound:
-    def __init__(self, tableDFs, tableNames, tableJoinCols, relativeErrorPerSegment, originalFilterCols = [], 
-                     numBuckets = 25, numEqualityOutliers=500, FKtoKDict = dict(),
-                     numOutliers = 5, trackNulls=True, trackBiGrams=True, numCores=12, groupingMethod = "CompleteClustering",
+    def __init__(self, tableDFs, tableNames, tableJoinCols, originalFilterCols = [], relativeErrorPerSegment=.05,
+                     numHistogramBuckets = 25, numEqualityOutliers=500, FKtoKDict = dict(),
+                     numCDFGroups = 5, trackNulls=True, trackBiGrams=True, numCores=12, groupingMethod = "CompleteClustering",
                      modelCDF=True, verbose=False):
         self.tableStatsDict = dict()
         self.relativeErrorPerSegment = relativeErrorPerSegment
-        self.numOutliers = numOutliers
+        self.numCDFGroups = numCDFGroups
         self.numEqualityOutliers = numEqualityOutliers
-        self.numBuckets = numBuckets
+        self.numHistogramBuckets = numHistogramBuckets
         self.numTables = len(tableDFs)
         self.trackNulls = trackNulls
         self.trackBiGrams = trackBiGrams
@@ -179,9 +179,9 @@ class SafeBound:
                                                                   tableJoinCols[i].copy(), 
                                                                   relativeErrorPerSegment,
                                                                   self.universalFilterCols[i].copy(),
-                                                                  numBuckets,
+                                                                  numHistogramBuckets,
                                                                   numEqualityOutliers,
-                                                                  numOutliers,
+                                                                  numCDFGroups,
                                                                   trackNulls,
                                                                   trackBiGrams,
                                                                   MPExecutor,
@@ -203,9 +203,9 @@ class SafeBound:
                                                                 tableJoinCols[i].copy(), 
                                                                 relativeErrorPerSegment,
                                                                 self.universalFilterCols[i].copy(),
-                                                                numBuckets,
+                                                                numHistogramBuckets,
                                                                 numEqualityOutliers,
-                                                                numOutliers,
+                                                                numCDFGroups,
                                                                 trackNulls,
                                                                 trackBiGrams,
                                                                 None,
@@ -407,9 +407,10 @@ class SafeBound:
             print("Stats for: " + name)
             tableStat.printDiagnostics()
             
-    def memory(self):
+    def memory(self, verbose=False):
         footprint = 0
         for table, tableStats in self.tableStatsDict.items():
-            print("Table: " + table)
-            footprint += tableStats.memory()
+            if verbose:
+                print("Table: " + table)
+            footprint += tableStats.memory(verbose=verbose)
         return footprint

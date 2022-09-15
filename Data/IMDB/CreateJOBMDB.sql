@@ -7,8 +7,6 @@ drop table role_type;
 drop table aka_name;
 
 
-alter table movie_info_idx drop column info;
-
 alter table title drop column episode_of_id;
 alter table title drop column imdb_id;
 alter table title drop column imdb_index;

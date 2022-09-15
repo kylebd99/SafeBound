@@ -1,4 +1,4 @@
-from Pgmpy.models import BayesianModel
+from pgmpy.models import BayesianModel
 import numpy as np
 import logging
 import time
@@ -7,7 +7,7 @@ import copy
 from Models.BN_single_model import BN_Single
 from DeepDBUtils.rspn.algorithms.ranges import NominalRange, NumericRange
 from DataPrepare.StatisticalTypes import MetaType
-from Pgmpy.factors.discrete.CPD import TabularCPD
+from pgmpy.factors.discrete.CPD import TabularCPD
 logger = logging.getLogger(__name__)
 
 

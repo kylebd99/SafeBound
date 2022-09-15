@@ -103,7 +103,7 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt-get update
 sudo apt-get -y install postgresql-13
 sudo apt-get -y install postgresql-server-dev-13
-pg_ctlcluster 13 main start
+sudo pg_ctlcluster 13 main start
 ```
 Once it is installed, modify the postgresql.conf file to set reasonable configuration parameters. Specifically, we set the shared memory to
 4GB, worker memory to 2GB, OS cache size to 32 GB, and max parallel workers to 6.

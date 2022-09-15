@@ -75,7 +75,11 @@ conda activate TestEnv
 
 2) Build the pybloomfilter package.
 
-```python pybloomfiltermmap3/setup.py install``` 
+```
+cd pybloomfiltermmap3
+python pybloomfiltermmap3/setup.py install
+cd ..
+``` 
 
 3) Build the SafeBound package
 

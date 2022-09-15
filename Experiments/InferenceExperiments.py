@@ -23,7 +23,7 @@ if __name__ == '__main__':
                                benchmark = benchmark,
                                outputFile = outputFile,
                                statisticsTarget = None)
-'''
+
     for i in range(1,6):
         for benchmark in benchmarks:
             outputFile = rootFileDirectory + "Data/Results/Postgres_Inference_" + str(i) + "_" + benchmark  + ".csv"
@@ -40,7 +40,7 @@ if __name__ == '__main__':
                            statsFile =  ensembleDirectory,
                            benchmark = benchmark,
                            outputFile = outputFile)
-        
+'''        
     
     for i in range(1,6):
         for benchmark in benchmarks:

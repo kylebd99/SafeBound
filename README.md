@@ -97,6 +97,9 @@ sudo apt-get -y install postgresql-13
 sudo apt-get -y install postgresql-server-dev-13
 pg_ctlcluster 13 main start
 ```
+Once it is installed, modify the postgresql.conf file to set reasonable configuration parameters. Specifically, we set the shared memory to
+4GB, worker memory to 2GB, OS cache size to 32 GB, and max parallel workers to 6.
+
 
 To make the remainder of the commands run smoothly, you have to create a user with the same username as your linux username. This allows for the "psql" command to be run without sudo.
 
@@ -136,7 +139,7 @@ In order to run them, simply do the following commands in order:
 9) ``python Experiments/InferenceExperiments.py``
 10) ``python Experiments/RuntimeExperiments.py``
 
-
+After these are run, results should be available in the Data/Results directory. The main visualizations can then be generated with the jupyter notebooks BuildGraph, InferenceGraphs, and RuntimeGraphs.
 
 
 

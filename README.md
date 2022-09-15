@@ -26,7 +26,7 @@ They split roughly into three categories; 1) required data inputs 2) tuning knob
 
 The former are ***tableDFs, tableNames, tableJoinCols, originalFilterCols and FKtoKDict*** which define the data and schema. All columns which will be used in an equi-join must be declared in the ***tableJoinCols*** parameter, and all columns which will be filtered on (e.g. 'R.A=1') must be declared in ***originalFilterCols***. The final parameter ***FKtoKDict*** is used to define FK-PK relationships and does not need to cover all joins in the target workload. It simply allows for statistics collection across FK-PK joins. Note: the graph defined on the tables by the FK-K dictionary must be acyclic.
 
-The primary tuning knobs are ***relativeErrroPerSegment, numBuckets, numEqualityOutliers, and NumOutliers***. These control CDF modeling accuracy, histogram granularity, MCV list length, and the aggressiveness of the clustering operation, respectively. ***NumCores*** tunes the number of processes used when building the statistics, but does not affect the statistics once constructed. ***trackNulls and trackBiGrams*** simply remove the statistics for NULL/NOT NULL and LIKE predicates for workloads where these do not apply.
+The primary tuning knobs are ***relativeErrroPerSegment, numBuckets, numEqualityOutliers, and NumOutliers***. These control CDF modeling accuracy, histogram granularity, MCV list length, and the aggressiveness of the clustering operation, respectively. ***NumCores*** tunes the number of processes and amount of memroy used when building the statistics, but does not affect the statistics once constructed. ***trackNulls and trackBiGrams*** simply remove the statistics for NULL/NOT NULL and LIKE predicates for workloads where these do not apply.
 
 Lastly, ***groupingMethod and ModelCDF*** are experimental knobs which should be left to their defaults in practice.
 
@@ -97,6 +97,9 @@ sudo apt-get -y install postgresql-13
 sudo apt-get -y install postgresql-server-dev-13
 pg_ctlcluster 13 main start
 ```
+Once it is installed, modify the postgresql.conf file to set reasonable configuration parameters. Specifically, we set the shared memory to
+4GB, worker memory to 2GB, OS cache size to 32 GB, and max parallel workers to 6.
+
 
 To make the remainder of the commands run smoothly, you have to create a user with the same username as your linux username. This allows for the "psql" command to be run without sudo.
 
@@ -136,7 +139,7 @@ In order to run them, simply do the following commands in order:
 9) ``python Experiments/InferenceExperiments.py``
 10) ``python Experiments/RuntimeExperiments.py``
 
-
+After these are run, results should be available in the Data/Results directory. The main visualizations can then be generated with the jupyter notebooks BuildGraph, InferenceGraphs, and RuntimeGraphs.
 
 
 

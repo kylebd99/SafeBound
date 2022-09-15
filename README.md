@@ -63,7 +63,7 @@ SafeBound can currently handle acyclic queries with single-attribute inner joins
 
 
 # Reproducibility
-This section assumes a linux (specifically Ubuntu) environment. Other linux distributions should be easy to adjust the instructions for, but Windows and MacOS are not supported. Note, all commands are intended to be run from the outermost directory of the repository.
+This section assumes a linux (specifically Ubuntu) environment. Other linux distributions should be easy to adjust the instructions for, but Windows and MacOS are not supported. 
 
 ***Building SafeBound Library***
 1) Set up the conda environment in order to build SafeBound using the environment.yml file.
@@ -83,7 +83,11 @@ cd ..
 
 3) Build the SafeBound package
 
-```python Source/CythonBuild.py build_ext```
+```
+cd Source
+python Source/CythonBuild.py build_ext
+cd ..
+```
 
 At this point, the SafeBound library should be ready for use. An example usage can be found in the "ExampleUsage" notebook. 
 

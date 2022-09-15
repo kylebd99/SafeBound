@@ -4,11 +4,10 @@ import numpy as np
 import sys, os
 rootFileDirectory = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) +'/'
 sys.path.append(rootFileDirectory + 'Source')
-print(rootFileDirectory+'Source')
 from JoinGraphUtils import *
 
 def getDBConn(dbName="IMDB"):
-    conn = psycopg2.connect(dbname=dbName, host='/var/run/postgresql', user="ec2-user", port='5432' )
+    conn = psycopg2.connect(dbname=dbName, host='/var/run/postgresql', port='5432' )
     conn.set_session(autocommit = True)    
     conn.cursor().execute("Load 'pg_hint_plan';")
     dbConn = DatabaseConnection(conn, dbName)

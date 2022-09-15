@@ -93,7 +93,8 @@ The following steps are specific to recreating the experimental environment from
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
-sudo apt-get -y install postgresql
+sudo apt-get -y install postgresql-13
+sudo apt-get -y install postgresql-server-dev-13
 pg_ctlcluster 13 main start
 ```
 
@@ -101,13 +102,23 @@ To make the remainder of the commands run smoothly, you have to create a user wi
 
 ```sudo -u postgres createuser [USERNAME] –interactive```
 
-5) Create the JOB benchmark databases. This command may run for several minutes as it creates a version of the IMDB database for each benchmark JOBLight, JOBLightRanges, and JOBM.
+5) Install the pg_hint_plan extension for postgres. This is used for injecting cardinality estimates into postgres' query optimizer.
+
+```
+git clone https://github.com/ossc-db/pg_hint_plan.git
+git checkout PG13
+cd pg_hint_plan
+sudo make
+sudo make install
+```
+
+6) Create the JOB benchmark databases. This command may run for several minutes as it creates a version of the IMDB database for each benchmark JOBLight, JOBLightRanges, and JOBM.
 
 ```
 bash CreateJOBBenchmark.bash
 ```
 
-6) Create the Stats benchmark database.
+7) Create the Stats benchmark database.
 
 ```
 bash CreateStatsBenchmark.bash
@@ -121,9 +132,9 @@ Restricting the experiments to the JOBLight and Stats benchmarks should signific
 
 In order to run them, simply do the following commands in order:
 
-1) ``python Experiments/BuildExperiments.py``
-2) ``python Experiments/InferenceExperiments.py``
-3) ``python Experiments/RuntimeExperiments.py``
+8) ``python Experiments/BuildExperiments.py``
+9) ``python Experiments/InferenceExperiments.py``
+10) ``python Experiments/RuntimeExperiments.py``
 
 
 

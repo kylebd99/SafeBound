@@ -81,7 +81,7 @@ conda activate env SafeBoundEnv
 
 ```python Source/CythonBuild.py build_ext```
 
-At this point, the SafeBound library should be ready for use. An example usage can be found in the [CREATE EXAMPLE JUPYTER NOTEBOOK]. 
+At this point, the SafeBound library should be ready for use. An example usage can be found in the "ExampleUsage" notebook. 
 
 ***Setting Up Benchmarks***
 

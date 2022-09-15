@@ -69,8 +69,8 @@ This section assumes a linux (specifically Ubuntu) environment. Other linux dist
 1) Set up the conda environment in order to build SafeBound using the environment.yml file.
 
 ```
-conda env create SafeBoundEnv
-conda activate env SafeBoundEnv
+conda env create
+conda activate TestEnv
 ```
 
 2) Build the pybloomfilter package.

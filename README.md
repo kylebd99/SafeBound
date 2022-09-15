@@ -63,23 +63,31 @@ SafeBound can currently handle acyclic queries with single-attribute inner joins
 
 
 # Reproducibility
-This section assumes a linux (specifically Ubuntu) environment. Other linux distributions should be easy to adjust the instructions for, but Windows and MacOS are not supported. Note, all commands are intended to be run from the outermost directory of the repository.
+This section assumes a linux (specifically Ubuntu) environment. Other linux distributions should be easy to adjust the instructions for, but Windows and MacOS are not supported. 
 
 ***Building SafeBound Library***
 1) Set up the conda environment in order to build SafeBound using the environment.yml file.
 
 ```
-conda env create SafeBoundEnv
-conda activate env SafeBoundEnv
+conda env create
+conda activate TestEnv
 ```
 
 2) Build the pybloomfilter package.
 
-```python pybloomfiltermmap3/setup.py install``` 
+```
+cd pybloomfiltermmap3
+python pybloomfiltermmap3/setup.py install
+cd ..
+``` 
 
 3) Build the SafeBound package
 
-```python Source/CythonBuild.py build_ext```
+```
+cd Source
+python Source/CythonBuild.py build_ext
+cd ..
+```
 
 At this point, the SafeBound library should be ready for use. An example usage can be found in the "ExampleUsage" notebook. 
 
@@ -95,7 +103,7 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt-get update
 sudo apt-get -y install postgresql-13
 sudo apt-get -y install postgresql-server-dev-13
-pg_ctlcluster 13 main start
+sudo pg_ctlcluster 13 main start
 ```
 Once it is installed, modify the postgresql.conf file to set reasonable configuration parameters. Specifically, we set the shared memory to
 4GB, worker memory to 2GB, OS cache size to 32 GB, and max parallel workers to 6.
@@ -109,8 +117,8 @@ To make the remainder of the commands run smoothly, you have to create a user wi
 
 ```
 git clone https://github.com/ossc-db/pg_hint_plan.git
-git checkout PG13
 cd pg_hint_plan
+git checkout PG13
 sudo make
 sudo make install
 ```
@@ -118,6 +126,8 @@ sudo make install
 6) Create the JOB benchmark databases. This command may run for several minutes as it creates a version of the IMDB database for each benchmark JOBLight, JOBLightRanges, and JOBM.
 
 ```
+cd ..
+cd ..
 bash CreateJOBBenchmark.bash
 ```
 

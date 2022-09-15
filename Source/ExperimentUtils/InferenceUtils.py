@@ -109,7 +109,7 @@ def evaluate_inference_bayes_card(ensembleDirectory,
     schema = None
     hasTrueCardinality = False
     if benchmark == 'JOBLight':
-        csvPath = rootFileDirectory + "Data/JOB"
+        csvPath = rootFileDirectory + "Data/IMDB"
         sqlFile =  rootFileDirectory + 'Workloads/JOBLightQueriesBayes.sql'
         schema = gen_job_light_imdb_schema(csvPath)
         hasTrueCardinality = True

@@ -115,7 +115,15 @@ bash CreateStatsBenchmark.bash
 
 ***Running Experiments***
 
+The experiments are run from three main files: ``BuildExperiments.py``, ``InferenceExperiments.py``, and ``RuntimeExperiments.py``. Note that these will take significant time to complete. Roughly, BuildExperiments should take 4-8 hours. InferenceExperiments should take 5-10 minutes. RuntimeExperiments should take 1-2 days.
 
+Restricting the experiments to the JOBLight and Stats benchmarks should significantly lower this time, and this can be done by modifying the ``benchmarks`` parameter in each of these files. Further, reducing the ``numberOfRuns`` parameter in RuntimeExperiments.py will of course reduce the overall time.
+
+In order to run them, simply do the following commands in order:
+
+1) ``python Experiments/BuildExperiments.py``
+2) ``python Experiments/InferenceExperiments.py``
+3) ``python Experiments/RuntimeExperiments.py``
 
 
 

@@ -139,7 +139,7 @@ bash CreateStatsBenchmark.bash
 
 ***Running Experiments***
 
-The experiments are run from three main files: ``BuildExperiments.py``, ``InferenceExperiments.py``, and ``RuntimeExperiments.py``. Note that these will take significant time to complete. Roughly, BuildExperiments should take 4-8 hours. InferenceExperiments should take 5-10 minutes. RuntimeExperiments should take 1-2 days.
+The experiments are run from three main files: ``BuildExperiments.py``, ``InferenceExperiments.py``, and ``RuntimeExperiments.py``. Note that these will take significant time to complete. Roughly, BuildExperiments should take 4-8 hours. InferenceExperiments should take 10-30 minutes. RuntimeExperiments should take 1-2 days.
 
 Restricting the experiments to the JOBLight and Stats benchmarks should significantly lower this time, and this can be done by modifying the ``benchmarks`` parameter in each of these files. Further, reducing the ``numberOfRuns`` parameter in RuntimeExperiments.py will of course reduce the overall time.
 
@@ -153,6 +153,10 @@ After these are run, results should be available in the Data/Results directory. 
 
 
 
+# References
+This project relies on several others for crucial aspects. Some of these have been directly included in the repository for the sake of stability and reproducibility. For the bloom filters which represent our MCV lists, we use the bloom filters provided by the [pybloomfiltermmap3](https://github.com/prashnts/pybloomfiltermmap3) project. In order to integrate estimates into Postgresql, we take advantage of the pg_hint_plan plug-in which can be found [here](https://github.com/ossc-db/pg_hint_plan). We include two comparison methods in this repository: [Postgres](https://www.postgresql.org/)'s internal optimizer and [BayesCard](https://github.com/wuziniu/BayesCard). 
+
+We compare against two benchmarks. The first, the Join Order Benchmark, was originally proposed by [Viktor Leis et al.](https://github.com/gregrahn/join-order-benchmark), but we use the query workloads from later [work](https://github.com/neurocard/neurocard/tree/master/neurocard/queries). The second is the STATS benchmark which can be found [here](https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark).
 
 
 

@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     Postgres2DParams = [10, 100, 1000, 5000, 10000]
     
-    '''
+    
     for i in range(1,6):
         for benchmark in benchmarks:
             statsFile = rootFileDirectory + "StatObjects/SafeBound_" + str(i)  + "_" + benchmark + ".pkl"
@@ -41,7 +41,7 @@ if __name__ == '__main__':
                            benchmark = benchmark,
                            outputFile = outputFile)
         
-    '''
+    
     for i in range(1,6):
         for benchmark in benchmarks:
             outputFile = rootFileDirectory + "Data/Results/Postgres2D_Inference_" + str(i) + "_"  + benchmark + ".csv"

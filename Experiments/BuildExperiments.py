@@ -15,7 +15,7 @@ if __name__ == '__main__':
                       'numCDFGroups' : [4, 6, 16, 32, 64],
                       'trackNulls' : [False for _ in range(5)],
                       'trackBiGrams' : [False for _ in range(5)],
-                      'numCores' : [18 for _ in range(5)],
+                      'numCores' : [6 for _ in range(5)],
                       'groupingMethod' : ["CompleteClustering" for _ in range(5)],
                       'modelCDF' : [True for _ in range(5)],
                       'verbose' : [False for _ in range(5)]} for benchmark in benchmarks

@@ -77,7 +77,7 @@ conda activate TestEnv
 
 ```
 cd pybloomfiltermmap3
-python pybloomfiltermmap3/setup.py install
+python setup.py install
 cd ..
 ``` 
 
@@ -85,7 +85,7 @@ cd ..
 
 ```
 cd Source
-python Source/CythonBuild.py build_ext
+python CythonBuild.py build_ext --inplace
 cd ..
 ```
 

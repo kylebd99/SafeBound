@@ -126,6 +126,8 @@ sudo make install
 6) Create the JOB benchmark databases. This command may run for several minutes as it creates a version of the IMDB database for each benchmark JOBLight, JOBLightRanges, and JOBM.
 
 ```
+cd ..
+cd ..
 bash CreateJOBBenchmark.bash
 ```
 

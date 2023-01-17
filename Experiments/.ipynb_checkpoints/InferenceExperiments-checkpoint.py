@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     Postgres2DParams = [10, 100, 1000, 5000, 10000]
     
-    '''
+    
     for i in range(1,6):
         for benchmark in benchmarks:
             statsFile = rootFileDirectory + "StatObjects/SafeBound_" + str(i)  + "_" + benchmark + ".pkl"
@@ -23,7 +23,17 @@ if __name__ == '__main__':
                                benchmark = benchmark,
                                outputFile = outputFile,
                                statisticsTarget = None)
-                               '''
+   
+    for benchmark in benchmarks:
+        statsFile = rootFileDirectory + "StatObjects/Simplicity_" + benchmark + ".pkl"
+        outputFile = rootFileDirectory + "Data/Results/Simplicity_Inference_" + benchmark + ".csv"
+        evaluate_inference(method = 'Simplicity', 
+                           statsFile =  statsFile,
+                           benchmark = benchmark,
+                           outputFile = outputFile,
+                           statisticsTarget = None)
+
+            
     for i in range(1,6):
         for benchmark in benchmarks:
             outputFile = rootFileDirectory + "Data/Results/Postgres_Inference_" + str(i) + "_" + benchmark  + ".csv"
@@ -40,8 +50,8 @@ if __name__ == '__main__':
                            statsFile =  ensembleDirectory,
                            benchmark = benchmark,
                            outputFile = outputFile)
-        
-    '''
+'''        
+    
     for i in range(1,6):
         for benchmark in benchmarks:
             outputFile = rootFileDirectory + "Data/Results/Postgres2D_Inference_" + str(i) + "_"  + benchmark + ".csv"
@@ -58,5 +68,5 @@ if __name__ == '__main__':
         evaluate_inference(method = 'PessemisticCardinality', 
                            statsFile =  ensembleDirectory,
                            benchmark = benchmark,
-                           outputFile = outputFile)
-    ''' 
+                           outputFile = outputFile) 
+''' 

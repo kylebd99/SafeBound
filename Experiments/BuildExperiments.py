@@ -27,9 +27,6 @@ if __name__ == '__main__':
 
     SafeBoundFileNames = [rootFileDirectory + "StatObjects/SafeBound2_" + str(i) for i in range(1,6)]
 
-    PostgresParams = {'statisticsTarget' : [10, 100, 1000, 5000, 10000]}
-
-    Postgres2DParams = {'statisticsTarget' : [10, 100, 1000, 5000, 10000]}
 
     safeBoundBuildTime = []
     safeBoundSize = []
@@ -53,6 +50,28 @@ if __name__ == '__main__':
     safeBoundResults['Run'] = safeBoundRuns
     safeBoundResults.to_csv(rootFileDirectory + "Data/Results/SafeBound2_Build_Results.csv")
     
+       
+    simplicityBuildTime = []
+    simplicitySize = []
+    simplicityBenchmarks = []
+    for benchmark in benchmarks:
+        time, size = build_stats_object(method='Simplicity',
+                           benchmark=benchmark,
+                           parameters = {},
+                           outputFile = rootFileDirectory + "StatObjects/Simplicity" + "_" + benchmark + ".pkl"
+                    )
+        simplicityBuildTime.append(time)
+        simplicitySize.append(size)
+        simplicityBenchmarks.append(benchmark)
+    simplicityResults = pd.DataFrame()
+    simplicityResults['BuildTime'] = simplicityBuildTime
+    simplicityResults['Size'] = simplicitySize
+    simplicityResults['Benchmark'] = simplicityBenchmarks
+    simplicityResults.to_csv(rootFileDirectory + "Data/Results/Simplicity_Build_Results.csv")
+    
+    
+    PostgresParams = {'statisticsTarget' : [10, 100, 1000, 5000, 10000]}
+    Postgres2DParams = {'statisticsTarget' : [10, 100, 1000, 5000, 10000]}
     
     postgresBuildTime = []
     postgresSize = []

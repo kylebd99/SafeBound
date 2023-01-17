@@ -8,6 +8,7 @@ sys.path.append(rootFileDirectory + 'Source')
 from DBConnectionUtils import *
 from SafeBoundUtils import *
 from SQLParser import *
+from SimplicityImplementation import *
 sys.path.append(rootFileDirectory + 'bayescard')
 from Schemas.stats.schema import gen_stats_light_schema
 from Schemas.imdb.schema import gen_job_light_imdb_schema    
@@ -19,17 +20,16 @@ def evaluate_inference_safe_bound(statsFile,
                                   benchmark,
                                   outputFile):
     stats = pickle.load(open(statsFile, 'rb'))
-    queryJGs = None
     
     queryJGs = None    
     if benchmark == 'JOBLight':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
     elif benchmark == 'JOBLightRanges':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
     elif benchmark == 'JOBM':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBMQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
     elif benchmark == 'Stats':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
 
     queryLabels = []
     inferenceTimes = []
@@ -51,35 +51,152 @@ def evaluate_inference_safe_bound(statsFile,
     inferenceResults.to_csv(outputFile)
     
     
+    
+    
+def evaluate_inference_simplicity(statsFile, 
+                                  benchmark,
+                                  outputFile):
+    stats = pickle.load(open(statsFile, 'rb'))
+    queryJGs = None    
+    dbConn = None
+    if benchmark == 'JOBLight':
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
+        dbConn = getDBConn('imdblight')
+    elif benchmark == 'JOBLightRanges':
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        dbConn = getDBConn('imdblightranges')
+    elif benchmark == 'JOBM':
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
+        dbConn = getDBConn('imdbm')
+    elif benchmark == 'Stats':
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
+        dbConn = getDBConn('stats')
+    
+    queryLabels = []
+    inferenceTimes = []
+    cardinalityBounds = []
+    for i, queryJG in enumerate(queryJGs):
+        if i % 10 == 1:
+            print("Simplicity Inference Exps " + benchmark + " :" + str(100*float(i)/len(queryJGs)) + "% Done")
+        queryLabels.append(i)
+        inferenceStart = datetime.now()
+        bound = stats.getSimplicityBound(queryJG, dbConn)
+        inferenceEnd = datetime.now()
+        inferenceTimes.append((inferenceEnd-inferenceStart).total_seconds())
+        cardinalityBounds.append(bound)
+    inferenceResults = pd.DataFrame()
+    inferenceResults['QueryLabel'] = queryLabels
+    inferenceResults['InferenceTime'] = inferenceTimes
+    inferenceResults['Estimate'] = cardinalityBounds
+    inferenceResults['StatsSize'] = stats.memory()
+    inferenceResults.to_csv(outputFile)
+    
+def getRelevantPreds(joinQueryGraph, vertex, FKtoKDict):
+    relevantFilterColsDict = dict()
+    reachableAliases = set([vertex.alias])
+    if vertex.tableName in FKtoKDict:
+        FKEdges = FKtoKDict[vertex.tableName]
+        for joinCol in vertex.outputJoinCols:
+            FKEdgesForJoinCol = [x for x in FKEdges if x[0] == joinCol]
+            equalityClassMembers = joinQueryGraph.equalityClasses[joinQueryGraph.equalityDict[vertex.alias + "." + vertex.tableName+"."+joinCol]]
+            for edge in FKEdgesForJoinCol:
+                for member in equalityClassMembers:
+                    parts = member.split('.')
+                    if edge[1] ==  parts[2] and edge[2] == joinQueryGraph.tableDict[parts[0]]:
+                        reachableAliases.add(parts[0])
+    relevantPreds = []
+    for alias in reachableAliases:
+        for pred in joinQueryGraph.vertexDict[alias].predicates:
+            suffix = ""
+            prefix = ""
+            if alias != vertex.alias:
+                suffix = "_fk_pk"
+                prefix = joinQueryGraph.tableDict[alias] + "_"
+            relevantPreds.append(Predicate(prefix + pred.colName + suffix, pred.predType, pred.compValue))
+        
+        if alias != vertex.alias:
+            joinQueryGraph.vertexDict[alias].predicates = []
+    return relevantPreds
+
+
+def propagatePKPredicates(originalQuery, FKtoKDict):
+    query = originalQuery.copy()
+    for vertex in query.vertexDict.values():
+        vertex.predicates = getRelevantPreds(query, vertex, FKtoKDict)
+    return query
+
+    
+def removePKJoins(query, FKtoKDict):
+    query = propagatePKPredicates(query, FKtoKDict)
+    return query
+
 def evaluate_inference_postgres(benchmark, 
                                 outputFile,
                                 statisticsTarget):
+    
+    IMDB_FKtoKDict = {"aka_title":[["movie_id", "id", "title"], ["kind_id", "id", "kind_type"]],
+         "cast_info":[["movie_id", "id", "title"],
+                      ["person_role_id", "id", "char_name"],
+                      ["role_id", "id", "role_type"]],
+        "movie_companies":[["movie_id", "id", "title"],
+                          ["company_id", "id", "company_name"],
+                          ["company_type_id", "id", "company_type"]],
+        "movie_info":[["movie_id", "id", "title"],
+                     ["info_type_id", "id", "info_type"]],
+        "movie_info_idx":[["movie_id", "id", "title"],
+                         ["info_type_id", "id", "info_type"]],
+        "movie_keyword":[["movie_id", "id", "title"],
+                        ["keyword_id", "id", "keyword"]],
+        "person_info":[["info_type_id", "id", "info_type"]],
+        }
+    
+    Stats_FKtoKDict = {"badges":[["UserId", "Id", "users"]],
+             "comments":[["PostId", "Id", "posts"], ["UserId", "Id", "users"]],
+             "postHistory":[["PostId", "Id", "posts"], ["UserId", "Id", "users"]],
+             "postLinks":[["PostId", "Id", "posts"]],
+             "posts":[["OwnerUserId", "Id", "users"]],
+             "tags":[["ExcerptPostId", "Id", "posts"]],
+             "votes":[["UserId", "Id", "users"],["PostId", "Id", "posts"]]
+            }
+    
     queryJGs = None        
     dbConn = None
     if benchmark == 'JOBLight':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
         dbConn = getDBConn('imdblight')
     elif benchmark == 'JOBLightRanges':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
         dbConn = getDBConn('imdblightranges')
     elif benchmark == 'JOBM':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBMQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
         dbConn = getDBConn('imdbm')
     elif benchmark == 'Stats':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
         dbConn = getDBConn('stats')
     elif benchmark == 'JOBLight2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
         dbConn = getDBConn('imdblight2d')
     elif benchmark == 'JOBLightRanges2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
         dbConn = getDBConn('imdblightranges2d')
     elif benchmark == 'JOBM2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBMQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
         dbConn = getDBConn('imdbm2d')
     elif benchmark == 'Stats2D':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
         dbConn = getDBConn('stats2d')
+    elif benchmark == 'JOBLight_FK_PK':
+        queryJGs =  [removePKJoins(x, IMDB_FKtoKDict) for x in SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')]
+        dbConn = getDBConn('imdb_fk_pk')
+    elif benchmark == 'JOBLightRanges_FK_PK':
+        queryJGs =  [removePKJoins(x, IMDB_FKtoKDict) for x in SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')]
+        dbConn = getDBConn('imdb_fk_pk')
+    elif benchmark == 'JOBM_FK_PK':
+        queryJGs =  [removePKJoins(x, IMDB_FKtoKDict) for x in SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')]
+        dbConn = getDBConn('imdb_fk_pk')
+    elif benchmark == 'Stats_FK_PK':
+        queryJGs =  [removePKJoins(x, Stats_FKtoKDict) for x in SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')]
+        dbConn = getDBConn('stats_fk_pk')
     
     dbConn.changeStatisticsTarget(statisticsTarget)
     queryLabels = []
@@ -109,19 +226,19 @@ def evaluate_inference_bayes_card(ensembleDirectory,
     schema = None
     hasTrueCardinality = False
     if benchmark == 'JOBLight':
-        csvPath = rootFileDirectory + "Data/JOB"
-        sqlFile =  rootFileDirectory + 'Workloads/JOBLightQueriesBayes.sql'
+        csvPath = rootDirectory + "Data/JOB"
+        sqlFile =  rootDirectory + 'Workloads/JOBLightQueriesBayes.sql'
         schema = gen_job_light_imdb_schema(csvPath)
         hasTrueCardinality = True
     elif benchmark == 'JOBLightRanges':
-        sqlFile =  rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql'
+        sqlFile =  rootDirectory + 'Workloads/JOBLightRangesQueries.sql'
         return
     elif benchmark == 'JOBM':
-        sqlFile =  rootFileDirectory + 'Workloads/JOBMQueries.sql'
+        sqlFile =  rootDirectory + 'Workloads/JOBMQueries.sql'
         return
     elif benchmark == 'Stats':
-        csvPath = rootFileDirectory + "Data/Stats/stats_simplified_bayes_card"
-        sqlFile =  rootFileDirectory + 'Workloads/StatsQueriesBayes.sql'
+        csvPath = rootDirectory + "Data/Stats/stats_simplified_bayes_card"
+        sqlFile =  rootDirectory + 'Workloads/StatsQueriesBayes.sql'
         schema = gen_stats_light_schema(csvPath)
         hasTrueCardinality = True
     
@@ -165,13 +282,13 @@ def evaluate_inference_bayes_card(ensembleDirectory,
 def evaluate_inference_pessimistic_cardinality_estimation(benchmark, outputFile):
     queryJGs = None    
     if benchmark == 'JOBLight':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightQueries.sql')
     elif benchmark == 'JOBLightRanges':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBLightRangesQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBLightRangesQueries.sql')
     elif benchmark == 'JOBM':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/JOBMQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/JOBMQueries.sql')
     elif benchmark == 'Stats':
-        queryJGs =  SQLFileToJoinQueryGraphs(rootFileDirectory + 'Workloads/StatsQueries.sql')
+        queryJGs =  SQLFileToJoinQueryGraphs(rootDirectory + 'Workloads/StatsQueries.sql')
     
     queryLabels = []
     inferenceTimes = []
@@ -234,10 +351,14 @@ def evaluate_inference(method = 'SafeBound',
                        statisticsTarget = None):
     if method == 'SafeBound':
         evaluate_inference_safe_bound(statsFile, benchmark, outputFile)
+    if method == 'Simplicity':
+        evaluate_inference_simplicity(statsFile, benchmark, outputFile)
     elif method == 'Postgres':
         evaluate_inference_postgres(benchmark, outputFile, statisticsTarget)
     elif method == 'Postgres2D':
         evaluate_inference_postgres(benchmark + "2D", outputFile, statisticsTarget)
+    elif method == 'Postgres_FK_PK':
+        evaluate_inference_postgres(benchmark + "_FK_PK", outputFile, statisticsTarget)
     elif method == 'BayesCard':
         evaluate_inference_bayes_card(statsFile, benchmark, outputFile)
     elif method == 'PessemisticCardinality':

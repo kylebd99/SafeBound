@@ -7,6 +7,7 @@ rootFileDirectory = os.path.dirname(os.path.dirname(os.path.dirname(os.path.absp
 sys.path.append(rootFileDirectory + 'Source')
 sys.path.append(rootFileDirectory + 'Source/ExperimentUtils')
 from SafeBoundUtils import *
+from SimplicityImplementation import *
 from DBConnectionUtils import *
 from LoadUtils import *
 sys.path.append(rootFileDirectory + 'bayescard')
@@ -16,22 +17,11 @@ from DataPrepare.join_data_preparation import JoinDataPreparator
 from Models.Bayescard_BN import Bayescard_BN, build_meta_info
 from DeepDBUtils.evaluation.utils import timestamp_transorform
 
+
 def build_safe_bound(benchmark, parameters, outputFile):
-    tableDFs = None
+    tables = None
     tableNames = None
     joinColumns = None
-    filterColumns = None
-    FKtoKDict = None
-    relativeErrorPerSegment = parameters['relativeErrorPerSegment']
-    numHistogramBuckets = parameters['numHistogramBuckets']
-    numEqualityOutliers = parameters['numEqualityOutliers']
-    numCDFGroups = parameters['numCDFGroups']
-    trackNulls = parameters['trackNulls']
-    trackBiGrams = parameters['trackBiGrams']
-    numCores = parameters['numCores']
-    verbose = parameters['verbose']
-    groupingMethod = parameters["groupingMethod"]
-    modelCDF = parameters["modelCDF"]
     
     
     if benchmark == 'JOBLight':
@@ -201,8 +191,6 @@ def build_safe_bound(benchmark, parameters, outputFile):
                           ["VoteTypeId", "CreationDate", "BountyAmount"]
                         ]
                 
-        tableDFs = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
-        del data
         
         FKtoKDict = {"badges":[["UserId", "Id", "users"]],
                      "comments":[["PostId", "Id", "posts"], ["UserId", "Id", "users"]],
@@ -212,23 +200,167 @@ def build_safe_bound(benchmark, parameters, outputFile):
                      "tags":[["ExcerptPostId", "Id", "posts"]],
                      "votes":[["UserId", "Id", "users"],["PostId", "Id", "posts"]]
                     }
+        tableDFs = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
+        del data
+        
+    elif "TPCH" in benchmark:
+        size = benchmark.split("-")[1]
+        
+        data = load_tpch(size)
+        
+        tableNames = ["nation", "region", "supplier", "customer", "part", "partsupp", "orders", "lineitem"]
+        joinColumns = [["n_nationkey", "n_regionkey"], 
+                       ["r_regionkey"],
+                       ["s_suppkey", "s_nationkey"],
+                       ["c_custkey", "c_nationkey"],
+                       ["p_partkey"],
+                       ["ps_partkey", "ps_suppkey"],
+                       ["o_orderkey", "o_custkey"],
+                       ["l_orderkey", "l_partkey", "l_suppkey"]]
+
+        filterColumns = [["n_name", "n_comment"], 
+                         ["r_name", "r_comment"],
+                         ["s_name", "s_address", "s_phone", "s_acctbal", "s_comment"],
+                         ["c_name", "c_address", "c_phone", "c_acctbal", "c_mktsegment", "c_comment"],
+                         ["p_name", "p_mfgr", "p_brand", "p_type", "p_size", "p_container", "p_retailprice", "p_comment"],
+                         ["ps_availqty", "ps_supplycost", "ps_comment"],
+                         ["o_orderstatus", "o_totalprice", "o_orderdate", "o_orderpriority", "o_clerk", "o_shippriority", "o_comment"],
+                         ["l_linenumber", "l_quantity", "l_extendedprice", "l_discount", "l_tax", "l_returnflag", "l_linestatus", "l_shipdate",
+                              "l_commitdate", "l_receiptdate", "l_shipinstruct", "l_shipmode", "l_comment"]]
+
+        FKtoKDict = {"nation":[["n_regionkey", "r_regionkey", "region"]],
+                     "supplier":[["s_nationkey", "n_nationkey", "nation"]],
+                     "customer":[["c_nationkey", "n_nationkey", "nation"]],
+                     "partsupp":[["ps_partkey", "p_partkey", "part"],
+                                 ["ps_suppkey", "s_suppkey", 'supplier']],
+                     "orders":[["o_custkey", "c_custkey", "customer"]],
+                     "lineitem":[["l_orderkey", "o_orderkey", "orders"],
+                         ["l_partkey", "p_partkey", "part"],
+                         ["l_suppkey", "s_suppkey", "supplier"]]}
+        
+        tables = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
+        for i, table in enumerate(tables):
+            for column in table.columns:
+                if "key" in column:
+                    table.loc[column] = table[column].astype("Int64")
+
+        del data
         
     buildStart = datetime.now()
-    stats = SafeBound(tableDFs= tableDFs,
-                      tableNames=tableNames,
-                      tableJoinCols = joinColumns,
-                      originalFilterCols = filterColumns,
-                      relativeErrorPerSegment = relativeErrorPerSegment,
-                      numHistogramBuckets = numHistogramBuckets, 
-                      numEqualityOutliers= numEqualityOutliers,
-                      FKtoKDict=FKtoKDict,
-                      numCDFGroups = numCDFGroups,
-                      trackNulls = trackNulls,
-                      trackBiGrams=trackBiGrams,
-                      numCores=numCores,
-                      groupingMethod=groupingMethod,
-                      modelCDF=modelCDF,
-                      verbose=verbose)
+    stats = SafeBound(tables, tableNames, joinColumns,
+                      relativeErrorPerSegment, filterColumns, numHistogramBuckets, 
+                      numEqualityOutliers, FKtoKDict, numCDFGroups,
+                      trackNulls, trackTriGrams, numCores, groupingMethod, modelCDF,
+                      verbose)
+    buildEnd = datetime.now()
+    buildSeconds = (buildEnd-buildStart).total_seconds()
+    pickle.dump(stats, open(outputFile, "wb" ))
+    return buildSeconds, stats.memory()
+
+def build_simplicity(benchmark, parameters, outputFile):
+    tables = None
+    tableNames = None
+    joinColumns = None
+    
+    
+    if benchmark == 'JOBLight':
+        data = load_imdb()
+        
+        tableNames = ["cast_info", 
+                      "movie_companies",
+                      "movie_info_idx",
+                      "movie_info",
+                      "movie_keyword",
+                      "title"]
+
+        joinColumns = [["movie_id"],
+                             ["movie_id"],
+                             ["movie_id"],
+                             ["movie_id"],
+                             ["movie_id"],
+                             ["id", "kind_id"]
+                            ]
+        
+        tables = [data[table][list(set(joinColumns[i]))] for i, table in enumerate(tableNames)]
+        del data
+        
+    elif benchmark == 'JOBLightRanges':
+        data = load_imdb()    
+
+        tableNames = ["cast_info", "movie_companies", "movie_info_idx", "movie_info",
+                     "movie_keyword", "title"]
+                  
+        joinColumns = [ ["movie_id"],
+                        ["movie_id"],
+                        ["movie_id"],
+                        ["movie_id"],
+                        ["movie_id"],
+                        ["id", "kind_id"]
+                        ]
+        tables = [data[table][list(set(joinColumns[i]))] for i, table in enumerate(tableNames)]
+        del data
+        
+    elif benchmark == 'JOBM': 
+        data = load_imdb()
+
+        tableNames = [ "cast_info", "aka_name", "aka_title",
+                          "comp_cast_type", "company_name",
+                     "company_type", "complete_cast", "info_type",
+                     "keyword", "kind_type", "link_type",
+                     "movie_companies", "movie_info_idx", "movie_info",
+                     "movie_keyword", "movie_link", "role_type", "title"]
+        
+        joinColumns = [
+                           ["id", "person_id", "movie_id", "person_role_id", "role_id"],
+                           ["id", "person_id"],
+                           ["id", "movie_id", "kind_id"],
+                           ["id"],
+                           ["id"],
+                           ["id"],
+                           ["id", "movie_id", "subject_id", "status_id"],
+                           ["id"],
+                           ["id"],
+                           ["id"],
+                           ["id"],
+                           ["id", "movie_id", "company_id", "company_type_id"],
+                           ["id", "movie_id", "info_type_id"],
+                           ["id", "movie_id", "info_type_id"],
+                           ["id", "movie_id", "keyword_id"],
+                           ["id", "movie_id", "linked_movie_id", "link_type_id"],
+                           ["id"],
+                           ["id", "kind_id"]
+                          ]
+
+        tables = [data[table][list(set(joinColumns[i]))] for i, table in enumerate(tableNames)]
+        del data
+        
+    elif benchmark == 'Stats':
+        data = load_stats()
+        
+        tableNames = ["badges",
+                      "comments", 
+                      "postHistory",
+                      "postLinks", 
+                      "posts", 
+                      "tags", 
+                      "users", 
+                      "votes"]
+        
+        joinColumns = [["Id","UserId"], 
+                        ["Id", "PostId", "UserId"],
+                        ["Id", "PostId", "UserId"],
+                        ["Id", "PostId", "RelatedPostId"],
+                        ["Id", "OwnerUserId", "LastEditorUserId"],
+                        ["Id", "ExcerptPostId"],
+                        ["Id"],
+                        ["Id", "PostId", "UserId"]]
+        
+        tables = [data[table][list(set(joinColumns[i]))] for i, table in enumerate(tableNames)]
+        del data
+      
+        
+    buildStart = datetime.now()
+    stats = Simplicity(tables, tableNames, joinColumns)
     buildEnd = datetime.now()
     buildSeconds = (buildEnd-buildStart).total_seconds()
     pickle.dump(stats, open(outputFile, "wb" ))
@@ -315,6 +447,9 @@ def build_stats_object(method = 'SafeBound',
     if method == 'SafeBound':
         return build_safe_bound(benchmark, parameters, outputFile)
     
+    if method == 'Simplicity':
+        return build_simplicity(benchmark, parameters, outputFile)
+    
     elif method == 'Postgres':
         return build_postgres(benchmark, parameters)
 
@@ -330,6 +465,7 @@ def build_stats_object(method = 'SafeBound',
     else:
         return -1
     
+
 
     
     

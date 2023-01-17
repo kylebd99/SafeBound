@@ -45,7 +45,18 @@ if __name__ == '__main__':
                            outputFile = outputFile,
                            statisticsTarget = None,
                             runs=numberOfRuns)
-           
+        
+        
+        statsFile = rootFileDirectory + "StatObjects/Simplicity_" + benchmark + ".pkl"
+        outputFile = rootFileDirectory + "Data/Results/Simplicity_Runtime_" + benchmark + fileExt
+        evaluate_runtime(method = 'Simplicity', 
+                           statsFile =  statsFile,
+                           benchmark = benchmark,
+                           outputFile = outputFile,
+                           statisticsTarget = None,
+                            runs=numberOfRuns)
+        
+            
         outputFile = rootFileDirectory + "Data/Results/Postgres_Runtime_" + str(PostgresRun) + "_" + benchmark + fileExt
         evaluate_runtime(method = 'Postgres', 
                            statsFile =  None,

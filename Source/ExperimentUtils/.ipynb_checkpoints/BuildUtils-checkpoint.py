@@ -404,8 +404,8 @@ def build_bayes_card(benchmark, parameters, outputFolder):
         csvPath = rootDirectory + "Data/Stats/stats_simplified_bayes_card"
         schema = gen_stats_light_schema(csvPath)
     elif benchmark == 'JOBLight':
-        hdfPath = rootDirectory + "Data/JOB/JOB_hdf"
-        csvPath = rootDirectory + "Data/JOB"
+        hdfPath = rootDirectory + "Data/IMDB/JOB_hdf"
+        csvPath = rootDirectory + "Data/IMDB"
         schema = gen_job_light_imdb_schema(csvPath)
     else:
         return 0,0

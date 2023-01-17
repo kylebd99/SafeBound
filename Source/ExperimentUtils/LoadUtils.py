@@ -75,14 +75,14 @@ def load_imdb():
             'title' : title}
 
 def load_stats():
-    badges = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/badges.csv")
-    comments = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/comments.csv")
-    postHistory = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/postHistory.csv")
-    postLinks = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/postLinks.csv")
-    posts = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/posts.csv")
-    tags = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/tags.csv")
-    users = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/users.csv")
-    votes = pd.read_csv(rootDirectory + "Data/Stats/stats_simplified/votes.csv")
+    badges = pd.read_csv(rootDirectory + "Data/Stats/badges.csv")
+    comments = pd.read_csv(rootDirectory + "Data/Stats/comments.csv")
+    postHistory = pd.read_csv(rootDirectory + "Data/Stats/postHistory.csv")
+    postLinks = pd.read_csv(rootDirectory + "Data/Stats/postLinks.csv")
+    posts = pd.read_csv(rootDirectory + "Data/Stats/posts.csv")
+    tags = pd.read_csv(rootDirectory + "Data/Stats/tags.csv")
+    users = pd.read_csv(rootDirectory + "Data/Stats/users.csv")
+    votes = pd.read_csv(rootDirectory + "Data/Stats/votes.csv")
     return {'badges': badges,
             'comments' : comments,
             'postHistory' : postHistory,

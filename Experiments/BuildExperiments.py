@@ -7,8 +7,8 @@ from BuildUtils import *
 if __name__ == '__main__':
     
     
-    benchmarks = ['JOBLight', 'JOBLightRanges', 'JOBM', 'Stats']
-    
+    benchmarks = ['JOBLight']
+    '''
     SafeBoundParams = {benchmark : {'relativeErrorPerSegment' : [.1, .05, .02, .01, .001],
                       'numHistogramBuckets' : [8, 16, 32, 64, 128],
                       'numEqualityOutliers' : [64, 128, 512, 1028, 2056],
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     postgresResults['Benchmark'] = postgresBenchmarks
     postgresResults['Run'] = postgresRuns
     postgresResults.to_csv(rootFileDirectory + "Data/Results/Postgres_Build_Results.csv")
-            
+    '''
     bayesCardBuildTime = []
     bayesCardSize = []
     bayesCardBenchmarks = []

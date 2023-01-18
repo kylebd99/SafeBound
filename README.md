@@ -16,17 +16,17 @@ There are two external-facing classes in this repository, `SafeBound` and `JoinQ
 The constructor for [SafeBound](https://github.com/AnonymousSigmod2023/SafeBound/blob/main/Source/SafeBoundUtils.pyx) has many parameters:
 
 ```
-SafeBound(tableDFs, tableNames, tableJoinCols, relativeErrorPerSegment, originalFilterCols = [], 
+SafeBound(tables, tableNames, tableJoinCols, relativeErrorPerSegment, originalFilterCols = [], 
                      numBuckets = 25, numEqualityOutliers=500, FKtoKDict = dict(),
-                     numOutliers = 5, trackNulls=True, trackBiGrams=True, numCores=12, groupingMethod = "CompleteClustering",
+                     numOutliers = 5, trackNulls=True, trackTriGrams=True, numCores=12, groupingMethod = "CompleteClustering",
                      modelCDF=True, verbose=False)
 ```
 
 They split roughly into three categories; 1) required data inputs 2) tuning knobs 3) experimental configurations. 
 
-The former are ***tableDFs, tableNames, tableJoinCols, originalFilterCols and FKtoKDict*** which define the data and schema. All columns which will be used in an equi-join must be declared in the ***tableJoinCols*** parameter, and all columns which will be filtered on (e.g. 'R.A=1') must be declared in ***originalFilterCols***. The final parameter ***FKtoKDict*** is used to define FK-PK relationships and does not need to cover all joins in the target workload. It simply allows for statistics collection across FK-PK joins. Note: the graph defined on the tables by the FK-K dictionary must be acyclic.
+The former are ***tables, tableNames, tableJoinCols, originalFilterCols and FKtoKDict*** which define the data and schema. All columns which will be used in an equi-join must be declared in the ***tableJoinCols*** parameter, and all columns which will be filtered on (e.g. 'R.A=1') must be declared in ***originalFilterCols***. The final parameter ***FKtoKDict*** is used to define FK-PK relationships and does not need to cover all joins in the target workload. It simply allows for statistics collection across FK-PK joins. Note: the graph defined on the tables by the FK-K dictionary must be acyclic.
 
-The primary tuning knobs are ***relativeErrroPerSegment, numBuckets, numEqualityOutliers, and NumOutliers***. These control CDF modeling accuracy, histogram granularity, MCV list length, and the aggressiveness of the clustering operation, respectively. ***NumCores*** tunes the number of processes and amount of memroy used when building the statistics, but does not affect the statistics once constructed. ***trackNulls and trackBiGrams*** simply remove the statistics for NULL/NOT NULL and LIKE predicates for workloads where these do not apply.
+The primary tuning knobs are ***relativeErrroPerSegment, numBuckets, numEqualityOutliers, and NumOutliers***. These control CDF modeling accuracy, histogram granularity, MCV list length, and the aggressiveness of the clustering operation, respectively. ***NumCores*** tunes the number of processes and amount of memroy used when building the statistics, but does not affect the statistics once constructed. ***trackNulls and trackTriGrams*** simply remove the statistics for NULL/NOT NULL and LIKE predicates for workloads where these do not apply.
 
 Lastly, ***groupingMethod and ModelCDF*** are experimental knobs which should be left to their defaults in practice.
 

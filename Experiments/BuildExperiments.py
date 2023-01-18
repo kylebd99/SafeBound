@@ -20,10 +20,10 @@ if __name__ == '__main__':
                       'modelCDF' : [True for _ in range(5)],
                       'verbose' : [False for _ in range(5)]} for benchmark in benchmarks
                       }
-    SafeBoundParams["JOBM"]['numEqualityOutliers'] = [5*x for x in SafeBoundParams["JOBM"]['numEqualityOutliers']]
-    SafeBoundParams["JOBM"]['trackTriGrams'] = [True for _ in range(5)]
-    SafeBoundParams["JOBM"]['trackNulls'] = [True for _ in range(5)]
-    SafeBoundParams["JOBM"]['verbose'] = [True for _ in range(5)]
+#    SafeBoundParams["JOBM"]['numEqualityOutliers'] = [5*x for x in SafeBoundParams["JOBM"]['numEqualityOutliers']]
+#    SafeBoundParams["JOBM"]['trackTriGrams'] = [True for _ in range(5)]
+#    SafeBoundParams["JOBM"]['trackNulls'] = [True for _ in range(5)]
+#    SafeBoundParams["JOBM"]['verbose'] = [True for _ in range(5)]
 
     SafeBoundFileNames = [rootFileDirectory + "StatObjects/SafeBound2_" + str(i) for i in range(1,6)]
 

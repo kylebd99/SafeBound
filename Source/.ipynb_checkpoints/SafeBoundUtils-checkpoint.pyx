@@ -20,43 +20,112 @@ class QueryTableStats:
         self.colFuncs = colFuncs
 
 class TableStats:
-    
-    def __init__(self, table, tableName, joinCols, relativeErrorPerSegment, filterCols = [],
-                 numHistogramBuckets = 25, numEqualityOutliers = 500, numCDFGroups =5, trackNulls=True,
-                 trackBiGrams=True, MPExecutor=None, groupingMethod="CompleteClustering", modelCDF=True, verbose=False):
+    def __init__(self, table, tableName, joinCols, filterCols, dimTables, dimJoins, dimFilterCols, relativeErrorPerSegment = .05,
+                 numBins = 25, numEqualityOutliers = 500, numOutliers = 5, trackNulls = True,
+                 trackTriGrams = True, groupingMethod = "CompleteClustering", modelCDF = True, verbose = False):
         self.tableName = tableName
-        self.relativeErrorPerSegment = relativeErrorPerSegment
-        self.numCDFGroups = numCDFGroups
-        self.numHistogramBuckets = numHistogramBuckets
+        self.numRows = len(table)
+        self.numBins = numBins
         self.numEqualityOutliers = numEqualityOutliers
-        self.filterCols = filterCols
-        self.joinCols = joinCols
+        self.relativeErrorPerSegment = relativeErrorPerSegment
+        self.numOutliers = numOutliers
+        self.filterCols = filterCols.copy()
+        self.joinCols = joinCols.copy()
+        self.fullFunctions = dict()           
+        self.filterColStats = dict()
         self.trackNulls = trackNulls
-        self.trackBiGrams = trackBiGrams
-        self.histBins = dict()
+        self.trackTriGrams = trackTriGrams
+        self.groupingMethod = groupingMethod
+        self.modelCDF = modelCDF
+        self.verbose = verbose
         
-        table = table[set(self.filterCols + self.joinCols)]
         
-        self.functionHistogram = MultiColumnFunctionHistogram(table,
-                                                              self.filterCols,
-                                                              self.joinCols,
-                                                              self.numHistogramBuckets,
-                                                              self.numEqualityOutliers,
-                                                              self.relativeErrorPerSegment, 
-                                                              self.numCDFGroups,
-                                                              self.trackNulls,
-                                                              self.trackBiGrams,
-                                                              MPExecutor,
-                                                              groupingMethod,
-                                                              modelCDF,
-                                                              verbose)  
-
-    def calculateError(self, func, data, offset = 0):
-        sortedData = sorted(data, reverse = True)
-        error = 0
-        for i in range(len(sortedData)):
-            error += abs(sortedData[i]-func.calculateValueAtPoint(offset + i))
-        return error
+        if verbose > 0:
+            print("Building Full Table Approximations")
+        
+        for joinCol in self.joinCols:
+            valCounts = np.array(table[joinCol].value_counts(ascending=False).to_list(), dtype='int')
+            function = PiecewiseConstantFunction(valCounts, self.relativeErrorPerSegment/4.0, modelCDF=modelCDF) # The number of segments is increased for the full approximation. 
+            function.compressFunc()
+            self.fullFunctions[joinCol] = function
+        
+        self.table = table
+        self.filterColAndDimTableJoin = []
+        for filterCol in filterCols:
+            self.filterColAndDimTableJoin.append([filterCol, None])
+        
+        for i in range(len(dimTables)):
+            for filterCol in dimFilterCols[i]:
+                self.filterColAndDimTableJoin.append([filterCol, (dimJoins[i][0], dimJoins[i][1], dimTables[i])])
+            
+        
+    def startFilterColumnStatsBuildProcess(self, MPExecutor):
+        if len(self.filterColAndDimTableJoin) == 0:
+            self.table = None
+            return None
+        
+        curFilterCol, curDimTableJoin = self.filterColAndDimTableJoin.pop(0)
+        curTable = self.table
+        if curDimTableJoin:
+            curTable = self.table.merge(curDimTableJoin[2][[curFilterCol, curDimTableJoin[1]]] , left_on=curDimTableJoin[0], right_on=curDimTableJoin[1])
+        
+        if self.verbose > 0:
+            print("Building Stats: " + curFilterCol)
+        futureStats = MPExecutor.submit(FilterColumnStats, 
+                                              curTable[list(set([curFilterCol]+self.joinCols))], 
+                                              curFilterCol,
+                                              self.joinCols.copy(),
+                                              self.numBins,
+                                              self.numEqualityOutliers, 
+                                              self.relativeErrorPerSegment,
+                                              self.numOutliers,
+                                              self.trackNulls,
+                                              self.trackTriGrams,
+                                              self.groupingMethod,
+                                              self.modelCDF,
+                                              self.verbose)
+        return curFilterCol, futureStats
+        
+    def addFilterColStats(self, filterCol, stats):
+        self.filterColStats[filterCol] = stats
+    
+    def getMinFunctionsSatisfyingPredicates(self, listOfPreds, joinCols):
+        if self.numRows == 0:
+            return {joinCol: getEmptyFunction() for joinCol in joinCols}
+        
+        numValidPreds = 0
+        predsByColumn = dict()
+        for pred in listOfPreds:
+            predsByColumn[pred.colName] = []
+        for pred in listOfPreds:
+            if pred.predType in [">",">=","<=","<"] and self.filterColStats[pred.colName].numBins == 0:
+                continue
+            elif pred.predType == "LIKE" and self.filterColStats[pred.colName].trackTriGrams == False:
+                continue
+            elif pred.predType in ["IS NULL", "IS NOT NULL"]  and self.filterColStats[pred.colName].trackNulls == False:
+                continue
+            predsByColumn[pred.colName].append(pred)
+            numValidPreds += 1
+        
+        if numValidPreds == 0:
+            minFunctionsDict = dict()
+            for joinCol in joinCols:
+                minFunctionsDict[joinCol] = self.fullFunctions[joinCol]
+            return minFunctionsDict
+        
+        validFunctions = [[] for _ in joinCols]
+        for filterCol, preds in predsByColumn.items():
+            joinColFunctions = self.filterColStats[filterCol].getMinFunctionsSatisfyingPredicates(preds, joinCols)
+            for i in range(len(joinCols)):
+                joinCol = joinCols[i]
+                function = joinColFunctions[joinCol]
+                validFunctions[i].append(function)
+    
+        minFunctionsDict = dict()
+        for i in range(len(joinCols)):
+            joinCol = joinCols[i]
+            minFunctionsDict[joinCol] = pointwiseFunctionMin(np.array(validFunctions[i]))
+        return minFunctionsDict
     
     def getQueryTableStats(self, outputJoinCols, alias, preds, verbose):
         if verbose >= 2:
@@ -66,7 +135,7 @@ class TableStats:
             
         relevantColFuncs = dict()
         joinCols = outputJoinCols
-        relevantColFuncs = self.functionHistogram.getMinFunctionsSatisfyingPredicates(preds, joinCols)
+        relevantColFuncs = self.getMinFunctionsSatisfyingPredicates(preds, joinCols)
         for joinCol in joinCols:
             if verbose:
                 print("Function for " + joinCol)
@@ -78,28 +147,34 @@ class TableStats:
         for joinCol in joinCols:
             relevantColFuncs[joinCol] = relevantColFuncs[joinCol].rightTruncateByRows(minRows)
         return QueryTableStats(alias, joinCols, relevantColFuncs)
-            
-    def printDiagnostics(self):
-        print("Function Histgrams:")
-        self.functionHistogram.printHists()
     
-    def memory(self, verbose):
-        return self.functionHistogram.memory(verbose)
+    def printDiagnostics(self):
+        for col in self.filterCols:
+            print("Stats For Column: " + col)
+            self.filterColStats[col].printDiagnostics()
+        
+    def memory(self):
+        footprint = 0
+        for col, stats in self.filterColStats.items():
+            footprint += stats.memory()
+        for joinCol in self.joinCols:
+            footprint += self.fullFunctions[joinCol].memory()
+        return footprint
 
 
 class SafeBound:
-    def __init__(self, tableDFs, tableNames, tableJoinCols, originalFilterCols = [], relativeErrorPerSegment=.05,
-                     numHistogramBuckets = 25, numEqualityOutliers=500, FKtoKDict = dict(),
-                     numCDFGroups = 5, trackNulls=True, trackBiGrams=True, numCores=12, groupingMethod = "CompleteClustering",
+    def __init__(self, tableDFs, tableNames, tableJoinCols, relativeErrorPerSegment, originalFilterCols = [], 
+                     numBuckets = 25, numEqualityOutliers=500, FKtoKDict = dict(),
+                     numOutliers = 5, trackNulls=True, trackTriGrams=True, numCores=12, groupingMethod = "CompleteClustering",
                      modelCDF=True, verbose=False):
         self.tableStatsDict = dict()
         self.relativeErrorPerSegment = relativeErrorPerSegment
-        self.numCDFGroups = numCDFGroups
+        self.numOutliers = numOutliers
         self.numEqualityOutliers = numEqualityOutliers
-        self.numHistogramBuckets = numHistogramBuckets
+        self.numBuckets = numBuckets
         self.numTables = len(tableDFs)
         self.trackNulls = trackNulls
-        self.trackBiGrams = trackBiGrams
+        self.trackTriGrams = trackTriGrams
         self.tableNames = tableNames
         self.modelCDF = modelCDF
         
@@ -108,111 +183,85 @@ class SafeBound:
         else:
             filterCols = [x.copy() for x in originalFilterCols]
         
-        tableNames = [x.upper() for x in tableNames]
+        self.tableNames = [x.upper() for x in self.tableNames]
         tableJoinCols = [x.copy() for x in tableJoinCols]
-        self.universalFilterCols = [x.copy()  for x in filterCols]
-        tableDFs = [tableDFs[i][list(set(filterCols[i] + tableJoinCols[i]))].copy() for i in range(len(tableDFs))]
-        universalTableDFs = [x.copy() for x in tableDFs]
         
         # First, we rename all of the columns by prepending the table name to avoid confusion after the merging.
         # Additionally, we uppercase all names.
         for i in range(len(tableNames)):
-            tableDFs[i].columns = [tableNames[i] + "." + x.upper() for x in tableDFs[i].columns]
-            universalTableDFs[i].columns = [tableNames[i] + "." + x.upper() for x in universalTableDFs[i].columns]
-            self.universalFilterCols[i] = [tableNames[i] +"."+ x.upper() for x in self.universalFilterCols[i]]
-            tableJoinCols[i] = [tableNames[i] + "." + x.upper() for x in tableJoinCols[i]]
+            tableDFs[i].columns = [self.tableNames[i] + "." + x.upper() for x in tableDFs[i].columns]
+            filterCols[i] = [self.tableNames[i] +"."+ x.upper() for x in filterCols[i]]
+            tableJoinCols[i] = [self.tableNames[i] + "." + x.upper() for x in tableJoinCols[i]]
+        self.universalFilterCols = [x.copy()  for x in filterCols]
         
-        FKtoKDictCopy = dict()
         self.FKtoKDict = dict()
         for leftTable, edges in FKtoKDict.items():
             newEdges = []
             for edge in edges:
                 newEdges.append([leftTable.upper() + "."+ edge[0].upper(), edge[2].upper() + "." + edge[1].upper(), edge[2].upper()])
             self.FKtoKDict[leftTable.upper()] = newEdges.copy()
-            FKtoKDictCopy[leftTable.upper()] = newEdges.copy()
         
-        for _ in range(1):
-            for i in range(len(tableNames)):
-                tableName = tableNames[i]
-                if tableName in FKtoKDictCopy:
-                    edges = FKtoKDictCopy[tableName].copy()
-                    newEdges = []
-                    for edge in edges:
-                        leftJoinCol = edge[0]
-                        rightJoinCol = edge[1]
-                        rightTableName = edge[2]
-                        
-                        for j in range(len(tableNames)):
-                            if tableNames[j] == rightTableName:
-                                filterColsToBeAdded = list(set(self.universalFilterCols[j])-set(self.universalFilterCols[i]))
-                                joinColsToBeAdded = list(set(tableJoinCols[j])-set(tableJoinCols[i]))
-                                colsToBeAdded = filterColsToBeAdded + joinColsToBeAdded
-                                universalTableDFs[i] = universalTableDFs[i].merge(universalTableDFs[j][list(set([rightJoinCol]+colsToBeAdded))],
-                                                                                  left_on=leftJoinCol, 
-                                                                                  right_on=rightJoinCol,
-                                                                                 how="left")
-                                self.universalFilterCols[i].extend(filterColsToBeAdded)
-                                self.universalFilterCols[i] = list(set(self.universalFilterCols[i]))
-                                universalTableDFs[i] = universalTableDFs[i]
-                                if rightTableName in FKtoKDictCopy:
-                                    newEdges.extend(FKtoKDictCopy[rightTableName].copy())
-                    FKtoKDictCopy[tableName] = newEdges.copy()
-                    self.universalFilterCols[i] = list(set(self.universalFilterCols[i]))
-        
-        self.universalFilterColsDict = dict()
-        for i in range(len(tableNames)):
-            self.universalFilterColsDict[tableNames[i]] = self.universalFilterCols[i]
-        
-        tableStatsConstructorArgs = []
-        if numCores > 1:
-            # We can use a with statement to ensure threads are cleaned up promptly
-            ctx = mp.get_context('spawn')
-            MPExecutor = ctx.Pool(processes=numCores, maxtasksperchild=1)
-            ThreadExecutor = concurrent.futures.ThreadPoolExecutor()
-            futureToTableName = dict()
-            for i in range(len(tableNames)):
-                if verbose:
-                    print("Building Table: " + tableNames[i])
-                futureToTableName[ThreadExecutor.submit(TableStats,
-                                                                  universalTableDFs[i],
-                                                                  tableNames[i],
-                                                                  tableJoinCols[i].copy(), 
-                                                                  relativeErrorPerSegment,
-                                                                  self.universalFilterCols[i].copy(),
-                                                                  numHistogramBuckets,
-                                                                  numEqualityOutliers,
-                                                                  numCDFGroups,
-                                                                  trackNulls,
-                                                                  trackBiGrams,
-                                                                  MPExecutor,
-                                                                  groupingMethod,
-                                                                  modelCDF,
-                                                                  verbose)] = tableNames[i]
-            for future in concurrent.futures.as_completed(futureToTableName):
-                tableName = futureToTableName[future]
-                try:
-                    self.tableStatsDict[tableName] = future.result()
-                except Exception as exc:
-                    print('%r generated an exception: %s' % (tableName, exc))
-        else:
-            for i in range(len(tableNames)):
-                if verbose:
-                    print("Building Table: " + tableNames[i])
-                self.tableStatsDict[tableNames[i]] = TableStats(universalTableDFs[i],
-                                                                tableNames[i],
-                                                                tableJoinCols[i].copy(), 
-                                                                relativeErrorPerSegment,
-                                                                self.universalFilterCols[i].copy(),
-                                                                numHistogramBuckets,
-                                                                numEqualityOutliers,
-                                                                numCDFGroups,
-                                                                trackNulls,
-                                                                trackBiGrams,
-                                                                None,
-                                                                groupingMethod,
-                                                                modelCDF,
-                                                                verbose)
-            
+        ctx = mp.get_context('spawn')
+        MPExecutor = concurrent.futures.ProcessPoolExecutor(max_workers=numCores, mp_context=ctx)
+        for i in range(len(self.tableNames)):
+            tableName = self.tableNames[i]
+            dimTables = []
+            dimJoins = []
+            dimFilterCols = []
+            if tableName in self.FKtoKDict:
+                dimJoins = self.FKtoKDict[tableName]
+                for join in dimJoins:
+                    for j in range(len(self.tableNames)):
+                        if join[2] == self.tableNames[j]:
+                            dimTables.append(tableDFs[j])
+                            dimFilterCols.append(filterCols[j])
+                dimJoins = [(x[0], x[1]) for x in dimJoins]
+            self.tableStatsDict[self.tableNames[i]] = TableStats(tableDFs[i],
+                                                              self.tableNames[i],
+                                                              tableJoinCols[i].copy(),
+                                                              self.universalFilterCols[i], 
+                                                              dimTables,
+                                                              dimJoins,
+                                                              dimFilterCols,
+                                                              relativeErrorPerSegment,
+                                                              numBuckets,
+                                                              numEqualityOutliers,
+                                                              numOutliers,
+                                                              trackNulls,
+                                                              trackTriGrams,
+                                                              groupingMethod,
+                                                              modelCDF,
+                                                              verbose)
+        finishedBuildingStats = False
+        self.activeTablesAndFilterColumnsAndFutures = []
+        while not finishedBuildingStats or len(self.activeTablesAndFilterColumnsAndFutures) > 0:
+            while not finishedBuildingStats and len(self.activeTablesAndFilterColumnsAndFutures) < numCores + 1:
+                tableAndFilterColumnAndFuture = self.startOneStatsBuildProcess(MPExecutor)
+                if tableAndFilterColumnAndFuture:
+                    self.activeTablesAndFilterColumnsAndFutures.append(tableAndFilterColumnAndFuture)
+                else:
+                    finishedBuildingStats = True
+                    break
+            self.finishOneStatsBuildProcess()
+    
+    def finishOneStatsBuildProcess(self):
+        finished = False
+        while not finished:
+            for i in range(len(self.activeTablesAndFilterColumnsAndFutures)):
+                if self.activeTablesAndFilterColumnsAndFutures[i][2].done():
+                    tableName, filterCol, statsFuture = self.activeTablesAndFilterColumnsAndFutures.pop(i)
+                    self.tableStatsDict[tableName].addFilterColStats(filterCol, statsFuture.result())
+                    finished = True
+                    break
+            time.sleep(.1)
+    
+    def startOneStatsBuildProcess(self, MPExecutor):
+        for table in self.tableNames:
+            filterColAndStatsFuture = self.tableStatsDict[table].startFilterColumnStatsBuildProcess(MPExecutor)
+            if filterColAndStatsFuture:
+                return (table, filterColAndStatsFuture[0], filterColAndStatsFuture[1])
+        return None
+    
     def calculateNonJoiningColumnFrequency(self, PiecewiseConstantFunction RX, 
                                                  PiecewiseConstantFunction SX, 
                                                  PiecewiseConstantFunction SY):
@@ -407,10 +456,9 @@ class SafeBound:
             print("Stats for: " + name)
             tableStat.printDiagnostics()
             
-    def memory(self, verbose=False):
+    def memory(self):
         footprint = 0
         for table, tableStats in self.tableStatsDict.items():
-            if verbose:
-                print("Table: " + table)
-            footprint += tableStats.memory(verbose=verbose)
+            print("Table: " + table)
+            footprint += tableStats.memory()
         return footprint

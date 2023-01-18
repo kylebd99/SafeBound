@@ -93,7 +93,7 @@ def build_safe_bound(benchmark, parameters, outputFile):
                         ["keyword_id"],
                         ["episode_nr", "season_nr", "production_year", "series_years", "kind_id", 'phonetic_code', 'series_years', 'imdb_index']
                         ]
-        tableDFs = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
+        tables = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
         del data
         
         FKtoKDict = {"cast_info":[["movie_id", "id", "title"]],

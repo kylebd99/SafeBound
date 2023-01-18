@@ -29,7 +29,7 @@ def build_safe_bound(benchmark, parameters, outputFile):
     numEqualityOutliers = parameters['numEqualityOutliers']
     numCDFGroups = parameters['numCDFGroups']
     trackNulls = parameters['trackNulls']
-    trackBiGrams = parameters['trackBiGrams']
+    trackTriGrams = parameters['trackTriGrams']
     numCores = parameters['numCores']
     verbose = parameters['verbose']
     groupingMethod = parameters["groupingMethod"]

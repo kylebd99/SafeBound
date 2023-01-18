@@ -22,6 +22,19 @@ def build_safe_bound(benchmark, parameters, outputFile):
     tables = None
     tableNames = None
     joinColumns = None
+    filterColumns = None
+    FKtoKDict = None
+    relativeErrorPerSegment = parameters['relativeErrorPerSegment']
+    numHistogramBuckets = parameters['numHistogramBuckets']
+    numEqualityOutliers = parameters['numEqualityOutliers']
+    numCDFGroups = parameters['numCDFGroups']
+    trackNulls = parameters['trackNulls']
+    trackBiGrams = parameters['trackBiGrams']
+    numCores = parameters['numCores']
+    verbose = parameters['verbose']
+    groupingMethod = parameters["groupingMethod"]
+    modelCDF = parameters["modelCDF"]
+    
     
     
     if benchmark == 'JOBLight':

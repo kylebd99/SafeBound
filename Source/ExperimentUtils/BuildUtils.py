@@ -36,7 +36,6 @@ def build_safe_bound(benchmark, parameters, outputFile):
     modelCDF = parameters["modelCDF"]
     
     
-    
     if benchmark == 'JOBLight':
         data = load_imdb()
         

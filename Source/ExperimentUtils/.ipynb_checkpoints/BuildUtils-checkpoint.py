@@ -22,6 +22,18 @@ def build_safe_bound(benchmark, parameters, outputFile):
     tables = None
     tableNames = None
     joinColumns = None
+    filterColumns = None
+    FKtoKDict = None
+    relativeErrorPerSegment = parameters['relativeErrorPerSegment']
+    numHistogramBuckets = parameters['numHistogramBuckets']
+    numEqualityOutliers = parameters['numEqualityOutliers']
+    numCDFGroups = parameters['numCDFGroups']
+    trackNulls = parameters['trackNulls']
+    trackTriGrams = parameters['trackTriGrams']
+    numCores = parameters['numCores']
+    verbose = parameters['verbose']
+    groupingMethod = parameters["groupingMethod"]
+    modelCDF = parameters["modelCDF"]
     
     
     if benchmark == 'JOBLight':
@@ -50,7 +62,7 @@ def build_safe_bound(benchmark, parameters, outputFile):
                                ["episode_nr", "season_nr", "production_year", "kind_id"]
                               ]
         
-        tableDFs = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
+        tables = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
         del data
         
         FKtoKDict = {"cast_info":[["movie_id", "id", "title"]],
@@ -81,7 +93,7 @@ def build_safe_bound(benchmark, parameters, outputFile):
                         ["keyword_id"],
                         ["episode_nr", "season_nr", "production_year", "series_years", "kind_id", 'phonetic_code', 'series_years', 'imdb_index']
                         ]
-        tableDFs = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
+        tables = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
         del data
         
         FKtoKDict = {"cast_info":[["movie_id", "id", "title"]],
@@ -142,7 +154,7 @@ def build_safe_bound(benchmark, parameters, outputFile):
                            ["episode_nr", "production_year", "title"]
                         ]
                 
-        tableDFs = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
+        tables = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
         del data
         
         FKtoKDict = {"aka_title":[["movie_id", "id", "title"], ["kind_id", "id", "kind_type"]],
@@ -200,7 +212,7 @@ def build_safe_bound(benchmark, parameters, outputFile):
                      "tags":[["ExcerptPostId", "Id", "posts"]],
                      "votes":[["UserId", "Id", "users"],["PostId", "Id", "posts"]]
                     }
-        tableDFs = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
+        tables = [data[table][list(set(joinColumns[i] + filterColumns[i]))] for i, table in enumerate(tableNames)]
         del data
         
     elif "TPCH" in benchmark:
@@ -245,7 +257,6 @@ def build_safe_bound(benchmark, parameters, outputFile):
                     table.loc[column] = table[column].astype("Int64")
 
         del data
-        
     buildStart = datetime.now()
     stats = SafeBound(tables, tableNames, joinColumns,
                       relativeErrorPerSegment, filterColumns, numHistogramBuckets, 

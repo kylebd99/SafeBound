@@ -7,21 +7,21 @@ from BuildUtils import *
 if __name__ == '__main__':
     
     
-    benchmarks = ['JOBLight']
-    '''
+    benchmarks = ['Stats']
+    
     SafeBoundParams = {benchmark : {'relativeErrorPerSegment' : [.1, .05, .02, .01, .001],
                       'numHistogramBuckets' : [8, 16, 32, 64, 128],
                       'numEqualityOutliers' : [64, 128, 512, 1028, 2056],
                       'numCDFGroups' : [4, 6, 16, 32, 64],
                       'trackNulls' : [False for _ in range(5)],
-                      'trackBiGrams' : [False for _ in range(5)],
+                      'trackTriGrams' : [False for _ in range(5)],
                       'numCores' : [6 for _ in range(5)],
                       'groupingMethod' : ["CompleteClustering" for _ in range(5)],
                       'modelCDF' : [True for _ in range(5)],
                       'verbose' : [False for _ in range(5)]} for benchmark in benchmarks
                       }
     SafeBoundParams["JOBM"]['numEqualityOutliers'] = [5*x for x in SafeBoundParams["JOBM"]['numEqualityOutliers']]
-    SafeBoundParams["JOBM"]['trackBiGrams'] = [True for _ in range(5)]
+    SafeBoundParams["JOBM"]['trackTriGrams'] = [True for _ in range(5)]
     SafeBoundParams["JOBM"]['trackNulls'] = [True for _ in range(5)]
     SafeBoundParams["JOBM"]['verbose'] = [True for _ in range(5)]
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     safeBoundResults['Benchmark'] = safeBoundBenchmarks
     safeBoundResults['Run'] = safeBoundRuns
     safeBoundResults.to_csv(rootFileDirectory + "Data/Results/SafeBound2_Build_Results.csv")
-    
+    '''
        
     simplicityBuildTime = []
     simplicitySize = []

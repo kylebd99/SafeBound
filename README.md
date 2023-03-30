@@ -158,6 +158,8 @@ This project relies on several others for crucial aspects. Some of these have be
 
 We compare against two benchmarks. The first, the Join Order Benchmark, was originally proposed by [Viktor Leis et al.](https://github.com/gregrahn/join-order-benchmark), but we use the query workloads from later [work](https://github.com/neurocard/neurocard/tree/master/neurocard/queries). The second is the STATS benchmark which can be found [here](https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark).
 
+# Contact
 
+If you're interested in this work, have questions, or run into issues with the code base, feel free to reach out to me at kylebd99@gmail.com ! 
 
 

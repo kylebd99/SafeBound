@@ -23,7 +23,7 @@ There are a couple reasons to use this module:
 ## Quickstart
 
 After you install, the interface to use is a cross between a file
-interface and an set interface. As an example:
+interface and an ste interface. As an example:
 ```python
     >>> import pybloomfilter
     >>> fruit = pybloomfilter.BloomFilter(100000, 0.1, '/tmp/words.bloom')

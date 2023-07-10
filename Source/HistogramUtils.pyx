@@ -267,14 +267,15 @@ class FilterColumnStats:
         
         for i in range(len(groupValues)):
             vals = groupValues[i]
-            bloomFilter = BloomFilter(len(vals), .00001)
+            numVals = max(100, len(vals))
+            bloomFilter = BloomFilter(numVals, .00001)
             for val in vals:
                 if isinstance(val, str):
                     bloomFilter.add(val)
                 else:
                     bloomFilter.add(str(float(val)))
             self.bloomFilters.append(bloomFilter)
-        
+          
         # To handle the remaining equality values, Groupby into [filterCol, size], 
         # then rank these pairs by size within each filterCol value. Then,take the maximum over each rank. 
         # This gives you the pointwise maximum degree function. Lastly, truncate it to the maximum number of

@@ -1,0 +1,8 @@
+pybloomfiltermmap3/*
+Source/*.c
+Source/*.cpp
+Source/*.cpython
+Source/build/*
+Source/.ipynb_checkpoints/*
+
+

@@ -187,7 +187,6 @@ dependencies:
   - zstd=1.5.2=ha4553b6_0
   - pip:
     - patsy==0.5.2
-    - pybloomfiltermmap3==0.5.3
     - pyqt5-sip==12.11.0
     - pyyaml==6.0
     - scikit-learn==1.1.2

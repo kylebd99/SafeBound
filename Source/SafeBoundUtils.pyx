@@ -189,6 +189,8 @@ class SafeBound:
         
         # First, we rename all of the columns by prepending the table name to avoid confusion after the merging.
         # Additionally, we uppercase all names.
+
+        tableDFs = [table.copy() for table in tableDFs]
         for i in range(len(tableNames)):
             tableDFs[i].columns = [self.tableNames[i] + "." + x.upper() for x in tableDFs[i].columns]
             filterCols[i] = [self.tableNames[i] +"."+ x.upper() for x in filterCols[i]]

@@ -7,6 +7,7 @@ from InferenceUtils import *
 
 if __name__ == '__main__':
     
+    #benchmarks = ['Stats']
     benchmarks = ['JOBLight', 'JOBLightRanges', 'JOBM', 'Stats']
 
     PostgresParams = [10, 100, 1000, 5000, 10000]
@@ -23,16 +24,6 @@ if __name__ == '__main__':
                                benchmark = benchmark,
                                outputFile = outputFile,
                                statisticsTarget = None)
-   
-    for benchmark in benchmarks:
-        statsFile = rootFileDirectory + "StatObjects/Simplicity_" + benchmark + ".pkl"
-        outputFile = rootFileDirectory + "Data/Results/Simplicity_Inference_" + benchmark + ".csv"
-        evaluate_inference(method = 'Simplicity', 
-                           statsFile =  statsFile,
-                           benchmark = benchmark,
-                           outputFile = outputFile,
-                           statisticsTarget = None)
-
             
     for i in range(1,6):
         for benchmark in benchmarks:
@@ -43,30 +34,3 @@ if __name__ == '__main__':
                                outputFile = outputFile,
                                statisticsTarget = PostgresParams[i-1])
      
-    for benchmark in benchmarks:
-        outputFile = rootFileDirectory + "Data/Results/BayesCard_Inference_"  + benchmark + ".csv"
-        ensembleDirectory = rootFileDirectory + "StatObjects/BayesCardEnsembles/" + benchmark +"/"
-        evaluate_inference(method = 'BayesCard', 
-                           statsFile =  ensembleDirectory,
-                           benchmark = benchmark,
-                           outputFile = outputFile)
-'''        
-    
-    for i in range(1,6):
-        for benchmark in benchmarks:
-            outputFile = rootFileDirectory + "Data/Results/Postgres2D_Inference_" + str(i) + "_"  + benchmark + ".csv"
-            evaluate_inference(method = 'Postgres2D', 
-                               statsFile =  None,
-                               benchmark = benchmark,
-                               outputFile = outputFile,
-                               statisticsTarget = Postgres2DParams[i-1])
-    
-    
-    for benchmark in benchmarks:
-        outputFile = rootFileDirectory + "Data/Results/PessemisticCardinality_Inference_"  + benchmark + ".csv"
-        ensembleDirectory = rootFileDirectory + "StatObjects/BayesCardEnsembles/" + benchmark +"/"
-        evaluate_inference(method = 'PessemisticCardinality', 
-                           statsFile =  ensembleDirectory,
-                           benchmark = benchmark,
-                           outputFile = outputFile) 
-''' 

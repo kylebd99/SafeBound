@@ -1,6 +1,7 @@
 Source/*.c
 Source/*.cpp
-Source/*.cpython*
+*.cpython*
+*cpython-*
 Source/build/*
 Source/.ipynb_checkpoints/*
 

@@ -7,8 +7,8 @@ from BuildUtils import *
 if __name__ == '__main__':
     
     
-    benchmarks = ['JOBM']
-#    benchmarks = ['Stats', 'JOBLight', 'JOBLightRanges', 'JOBM']
+#    benchmarks = ['Stats']
+    benchmarks = ['Stats', 'JOBLight', 'JOBLightRanges', 'JOBM']
     
     SafeBoundParams = {benchmark : {'relativeErrorPerSegment' : [.1, .05, .02, .01, .001],
                       'numHistogramBuckets' : [8, 16, 32, 64, 128],

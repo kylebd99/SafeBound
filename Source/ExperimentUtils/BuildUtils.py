@@ -10,12 +10,6 @@ from SafeBoundUtils import *
 from SimplicityImplementation import *
 from DBConnectionUtils import *
 from LoadUtils import *
-sys.path.append(rootFileDirectory + 'bayescard')
-from Schemas.stats.schema import gen_stats_light_schema
-from Schemas.imdb.schema import gen_job_light_imdb_schema
-from DataPrepare.join_data_preparation import JoinDataPreparator
-from Models.Bayescard_BN import Bayescard_BN, build_meta_info
-from DeepDBUtils.evaluation.utils import timestamp_transorform
 
 
 def build_safe_bound(benchmark, parameters, outputFile):
@@ -403,52 +397,6 @@ def build_postgres(benchmark, parameters):
     dbConn.runAnalyze()
     buildEnd = datetime.now()
     return (buildEnd-buildStart).total_seconds(), dbConn.memory()
-
-def build_bayes_card(benchmark, parameters, outputFolder):
-    
-    hdfPath = None
-    csvPath = None
-    schema = None
-    
-    if benchmark == 'Stats':
-        hdfPath = rootDirectory + "Data/Stats/stats_simplified_bayes_card/stats_hdf"
-        csvPath = rootDirectory + "Data/Stats/stats_simplified_bayes_card"
-        schema = gen_stats_light_schema(csvPath)
-    elif benchmark == 'JOBLight':
-        hdfPath = rootDirectory + "Data/IMDB/JOB_hdf"
-        csvPath = rootDirectory + "Data/IMDB"
-        schema = gen_job_light_imdb_schema(csvPath)
-    else:
-        return 0,0
-        
-    buildStart = datetime.now()
-    metaDataPath = hdfPath + '/meta_data.pkl'
-    prep = JoinDataPreparator(metaDataPath, schema, max_table_data=20000000)
-    
-    algorithm = "chow-liu"
-    maxParents = 1
-    sampleSize = 200000
-    modelSize = 0
-    for i, relationship_obj in enumerate(schema.relationships):
-        dfSampleSize = 10000000
-        relation = [relationship_obj.identifier]
-        df, metaTypes, nullValues, fullJoinEst = prep.generate_n_samples(dfSampleSize,
-                                                                        relationship_list=relation,
-                                                                        post_sampling_factor=10)
-        columns = list(df.columns)
-        assert len(columns) == len(metaTypes) == len(nullValues)
-        metaInfo = build_meta_info(df.columns, nullValues)
-        bn = Bayescard_BN(schema, relation, column_names=columns, full_join_size=len(df),
-                          table_meta_data=prep.table_meta_data, meta_types=metaTypes, null_values=nullValues,
-                          meta_info=metaInfo)
-        modelPath = outputFolder + f"/{i}_{algorithm}_{maxParents}.pkl"
-        bn.build_from_data(df, algorithm=algorithm, max_parents=maxParents, ignore_cols=['Id'],
-                           sample_size=sampleSize)
-        pickle.dump(bn, open(modelPath, 'wb'), pickle.HIGHEST_PROTOCOL)
-        modelSize +=  os.path.getsize(modelPath)
-    buildEnd = datetime.now()
-    return (buildEnd-buildStart).total_seconds(), modelSize
-
     
 def build_stats_object(method = 'SafeBound',
                        benchmark = 'JOBLight',
@@ -468,7 +416,7 @@ def build_stats_object(method = 'SafeBound',
         return build_postgres(benchmark + "2D", parameters)
     
     elif method == 'BayesCard':
-        return build_bayes_card(benchmark, parameters, outputFile)
+        return -1
     
     elif method == 'PessimisticCardinality':
         return -1

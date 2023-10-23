@@ -122,6 +122,7 @@ To make the remainder of the commands run smoothly, you have to create a user wi
 git clone https://github.com/ossc-db/pg_hint_plan.git
 cd pg_hint_plan
 git checkout PG13
+sudo apt-get install make
 sudo make
 sudo make install
 ```

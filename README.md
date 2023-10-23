@@ -86,6 +86,7 @@ cd ..
 3) Build the SafeBound package
 
 ```
+sudo apt-get install g++
 cd Source
 python CythonBuild.py build_ext --inplace
 cd ..

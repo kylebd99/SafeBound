@@ -10,11 +10,6 @@ from DBConnectionUtils import *
 from SafeBoundUtils import *
 from SimplicityImplementation import *
 from SQLParser import *
-sys.path.append(rootFileDirectory + 'bayescard')
-from Schemas.stats.schema import gen_stats_light_schema
-from Schemas.imdb.schema import gen_job_light_imdb_schema    
-from DataPrepare.query_prepare_BayesCard import prepare_join_queries
-from Models.BN_ensemble_model import BN_ensemble
 
 def reset_cache():
     os.system("sudo sh -c '/usr/bin/echo 3 > /proc/sys/vm/drop_caches'")

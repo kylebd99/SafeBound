@@ -65,36 +65,3 @@ if __name__ == '__main__':
                            statisticsTarget = PostgresParams[PostgresRun-1],
                             runs=numberOfRuns)
         
-        outputFile = rootFileDirectory + "Data/Results/BayesCard_Runtime_" + benchmark + fileExt
-        ensembleDirectory = rootFileDirectory + "StatObjects/BayesCardEnsembles/" + benchmark +"/"
-        evaluate_runtime(method = 'BayesCard', 
-                           statsFile =  ensembleDirectory,
-                           benchmark = benchmark,
-                           outputFile = outputFile,
-                            runs=numberOfRuns)
-        
-                                            
-        '''
-        outputFile = rootFileDirectory + "Data/Results/Postgres2D_Runtime_" + str(PostgresRun) + "_" + benchmark + fileExt
-        evaluate_runtime(method = 'Postgres2D', 
-                           statsFile =  None,
-                           benchmark = benchmark,
-                           outputFile = outputFile,
-                           statisticsTarget = Postgres2DParams[PostgresRun-1],
-                            runs=numberOfRuns)
-        
-        outputFile = rootFileDirectory + "Data/Results/PessemisticCardinality_Runtime_" + benchmark + fileExt
-        evaluate_runtime(method = 'PessemisticCardinality', 
-                           statsFile =  None,
-                           benchmark = benchmark,
-                           outputFile = outputFile,
-                            runs=numberOfRuns)
-        
-        outputFile = rootFileDirectory + "Data/Results/NeuroCard_Runtime_" + benchmark + fileExt
-        evaluate_runtime(method = 'NeuroCard', 
-                           statsFile =  None,
-                           benchmark = benchmark,
-                           outputFile = outputFile,
-                            runs=numberOfRuns)
-            
-        '''

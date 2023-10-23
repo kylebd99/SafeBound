@@ -76,6 +76,8 @@ conda activate TestEnv
 2) Build the pybloomfilter package.
 
 ```
+sudo apt-get update
+sudo apt-get install gcc
 cd pybloomfiltermmap3
 python setup.py install
 cd ..

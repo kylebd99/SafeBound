@@ -36,20 +36,9 @@ if __name__ == '__main__':
                             runs=numberOfRuns)
         
         
-        
         statsFile = rootFileDirectory + "StatObjects/SafeBound_" + str(safeBoundRun)  + "_" + benchmark + ".pkl"
         outputFile = rootFileDirectory + "Data/Results/SafeBound_Runtime_" + str(safeBoundRun) + "_" + benchmark + fileExt
         evaluate_runtime(method = 'SafeBound', 
-                           statsFile =  statsFile,
-                           benchmark = benchmark,
-                           outputFile = outputFile,
-                           statisticsTarget = None,
-                            runs=numberOfRuns)
-        
-        
-        statsFile = rootFileDirectory + "StatObjects/Simplicity_" + benchmark + ".pkl"
-        outputFile = rootFileDirectory + "Data/Results/Simplicity_Runtime_" + benchmark + fileExt
-        evaluate_runtime(method = 'Simplicity', 
                            statsFile =  statsFile,
                            benchmark = benchmark,
                            outputFile = outputFile,

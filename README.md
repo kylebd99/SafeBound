@@ -114,7 +114,7 @@ Once it is installed, modify the postgresql.conf file to set reasonable configur
 
 To make the remainder of the commands run smoothly, you have to create a user with the same username as your linux username. This allows for the "psql" command to be run without sudo.
 
-```sudo -u postgres createuser [USERNAME] –interactive```
+```sudo -u postgres createuser [USERNAME] --interactive```
 
 5) Install the pg_hint_plan extension for postgres. This is used for injecting cardinality estimates into postgres' query optimizer.
 

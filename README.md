@@ -4,7 +4,7 @@
 </p>
 This repository contains the experimental code for SafeBound, a practical cardinality bounding system. As opposed to traditional cardinality estimators, SafeBound produces an upper bound on the number of rows which a query can generate. The goal is for query optimizers which use these upper bounds to produce more robust, less optimistic query plans. 
 
-SafeBound is based off of theoretical work on the Degree Sequence Bound which can be found [here](https://arxiv.org/pdf/2201.04166). The theoretical details and broader design of SafeBound will be found in a forthcoming paper.
+SafeBound is based off of theoretical work on the Degree Sequence Bound which can be found [here](https://arxiv.org/pdf/2201.04166). The theoretical details and broader design of SafeBound can be found [here](https://dl.acm.org/doi/pdf/10.1145/3588907).
 
 
 # Usage

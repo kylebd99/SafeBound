@@ -82,6 +82,8 @@ cpdef long[:] calculateBinsRelativeError(long[:] data, double relativeError):
 cdef PiecewiseConstantFunction pointwiseFunctionMax(PiecewiseConstantFunction[:] functions):
     if len(functions) == 0:
         return getEmptyFunction()
+    elif len(functions) == 1:
+        return functions[0]
     
     cdef long[:] indices = np.zeros(len(functions), dtype='int')
     functionHasSpace = [True for _ in functions]
@@ -185,6 +187,9 @@ cpdef double pairwiseMaxAndSelfJoin(double[:] rightEdges_L,
 cpdef PiecewiseConstantFunction pointwisePDFMax(PiecewiseConstantFunction[:] functions):
     if len(functions) == 0:
         return getEmptyFunction()
+    elif len(functions) == 1:
+        return functions[0]
+    
     cdef long[:] indices = np.zeros(len(functions), dtype='int')
     maxSegmentCount = max([len(x.rightIntervalEdges) for x in functions])
     functionHasSpace = [True for _ in functions]
@@ -218,6 +223,8 @@ cpdef PiecewiseConstantFunction pointwisePDFMax(PiecewiseConstantFunction[:] fun
 cpdef PiecewiseConstantFunction pointwiseFunctionMin(PiecewiseConstantFunction[:] functions):
     if len(functions) == 0:
         return getEmptyFunction()
+    elif len(functions) == 1:
+        return functions[0]
     cdef long[:] indices = np.zeros(len(functions), dtype='int')
     functionHasSpace = [True for _ in functions]
     left = 0
@@ -259,6 +266,8 @@ cpdef PiecewiseConstantFunction pointwiseFunctionMin(PiecewiseConstantFunction[:
 cpdef PiecewiseConstantFunction pointwiseFunctionMult(PiecewiseConstantFunction[:] functions):
     if len(functions) == 0:
         return getEmptyFunction()
+    elif len(functions) == 1:
+        return functions[0]
     cdef long[:] indices = np.zeros(len(functions), dtype='int')
     functionHasSpace = [True for _ in functions]
     left = 0
